@@ -1,0 +1,2251 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة متابعة الأعضاء</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js" defer></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html{font-size:18px;overflow:hidden;width:100%;height:100%}
+body{font-family:'IBM Plex Sans Arabic',sans-serif;height:100%;width:100%;max-width:100vw;background:#1a1208;display:flex;align-items:center;justify-content:center;overflow:hidden;position:fixed;inset:0;overscroll-behavior:none}
+button,a,input,textarea,select,.member-item,.list-item,.perm-card,[onclick]{-webkit-tap-highlight-color:transparent;outline:none}
+button:focus,a:focus,.btn-press:focus{outline:none}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(217,119,6,.2);border-radius:8px}
+::-webkit-scrollbar-thumb:hover{background:rgba(217,119,6,.45)}
+.bg-orb{position:absolute;border-radius:50%;filter:blur(100px);opacity:.35;animation:orbFloat 15s ease-in-out infinite}
+.bg-orb-1{width:500px;height:500px;background:#d97706;top:-150px;right:-150px;animation-delay:0s}
+.bg-orb-2{width:400px;height:400px;background:#92400e;bottom:-120px;left:-120px;animation-delay:-5s}
+.bg-orb-3{width:350px;height:350px;background:#f59e0b;top:50%;left:50%;transform:translate(-50%,-50%);animation-delay:-10s;opacity:.15}
+@keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-40px) scale(1.1)}66%{transform:translate(-20px,30px) scale(.9)}}
+.grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:50px 50px;mask-image:radial-gradient(circle at center,black 30%,transparent 70%);-webkit-mask-image:radial-gradient(circle at center,black 30%,transparent 70%)}
+.screen{position:absolute;z-index:10;display:flex;flex-direction:column;align-items:center;width:100%;max-width:100vw;height:100vh;height:100dvh;opacity:0;pointer-events:none;overflow-x:hidden;overflow-y:auto;overscroll-behavior-y:contain;transition:opacity .4s cubic-bezier(.22,1,.36,1),transform .4s cubic-bezier(.22,1,.36,1);will-change:transform,opacity;contain:layout paint;padding:40px 20px;top:0;left:0;-webkit-overflow-scrolling:touch}
+.screen.active{opacity:1;pointer-events:all;z-index:20}
+.screen.enter-left{transform:translateX(-100%) !important;transition:none !important}
+.home-screen{justify-content:flex-start;padding-top:max(10vh,70px);gap:36px;transform:scale(1)}
+.logo-ring{position:relative;width:150px;height:150px}
+.logo-ring svg{width:100%;height:100%}
+.logo-inner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:95px;height:95px;background:rgba(255,255,255,.05);backdrop-filter:blur(10px);border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.1);box-shadow:0 0 40px rgba(217,119,6,.3),inset 0 1px 0 rgba(255,255,255,.1)}
+.logo-inner svg{width:42px;height:42px;fill:#fbbf24}
+.text-content{text-align:center;max-width:480px}
+.badge{display:inline-block;padding:10px 24px;background:rgba(217,119,6,.15);border:1px solid rgba(217,119,6,.3);border-radius:100px;color:#fbbf24;font-size:1rem;font-weight:700;margin-bottom:28px;letter-spacing:1px;text-shadow:0 0 12px rgba(251,191,36,.5)}
+.main-title{font-size:clamp(1.8rem,5vw,3rem);font-weight:700;color:#fff;line-height:1.3;margin-bottom:20px;text-shadow:0 0 12px rgba(255,255,255,.4)}
+.main-title span{background:linear-gradient(135deg,#fbbf24,#E7A64A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 15px rgba(231,166,74,.7))}
+.subtitle{font-size:clamp(.95rem,2.2vw,1.15rem);color:#d4b896;line-height:1.8;font-weight:400;text-shadow:0 0 12px rgba(212,184,150,.3)}
+.login-btn{display:inline-flex;align-items:center;gap:14px;padding:20px 64px;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:1.25rem;font-weight:700;color:#fff;background:#b45309;border:none;border-radius:16px;cursor:pointer;text-decoration:none;box-shadow:0 8px 32px rgba(180,83,9,.4),0 0 0 1px rgba(255,255,255,.1),inset 0 1px 0 rgba(255,255,255,.2);transition:all .4s cubic-bezier(.34,1.56,.64,1);position:relative;overflow:hidden}
+.login-btn:hover{background:#d97706;transform:translateY(-3px) scale(1.02);box-shadow:0 16px 48px rgba(217,119,6,.5),0 0 0 1px rgba(255,255,255,.15),inset 0 1px 0 rgba(255,255,255,.25)}
+.login-btn svg{width:24px;height:24px;fill:currentColor;transition:transform .3s ease}
+.login-btn:hover svg{transform:translateX(-4px)}
+.login-screen{justify-content:flex-start;padding-top:max(18vh,110px);gap:32px;transform:scale(1.1) translateY(30px)}
+.login-screen.active{transform:scale(1) translateY(0)}
+.login-card{width:100%;max-width:420px;background:rgba(255,255,255,.03);backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:40px 32px;box-shadow:0 25px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.08)}
+.login-header{text-align:center;margin-bottom:24px}
+.login-header h2{font-size:1.8rem;font-weight:700;color:#fff;margin-bottom:8px;text-shadow:0 0 12px rgba(255,255,255,.3)}
+.login-header p{font-size:.95rem;color:#d4b896}
+.form-group{margin-bottom:20px}
+.form-group label{display:block;font-size:.9rem;font-weight:600;color:#d4b896;margin-bottom:8px;text-align:right}
+.form-group input,.form-group select{width:100%;padding:16px 18px;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:1rem;color:#fff;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px;outline:none;transition:all .3s ease;text-align:right}
+.form-group select{appearance:none;cursor:pointer}
+.form-group select option{background:#1a1208;color:#fff}
+.form-group input::placeholder{color:rgba(212,184,150,.4)}
+.form-group input:focus,.form-group select:focus{border-color:rgba(217,119,6,.5);box-shadow:0 0 0 3px rgba(217,119,6,.15),0 0 20px rgba(217,119,6,.1);background:rgba(255,255,255,.07)}
+.submit-btn{width:100%;padding:18px;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:1.15rem;font-weight:700;color:#fff;background:linear-gradient(135deg,#b45309,#d97706);border:none;border-radius:16px;cursor:pointer;margin-top:12px;box-shadow:0 8px 32px rgba(180,83,9,.4),inset 0 1px 0 rgba(255,255,255,.2);transition:all .3s ease;letter-spacing:.5px}
+.submit-btn:hover{background:linear-gradient(135deg,#d97706,#f59e0b);transform:translateY(-3px);box-shadow:0 16px 40px rgba(217,119,6,.5),inset 0 1px 0 rgba(255,255,255,.25)}
+.back-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:.9rem;font-weight:600;color:#d4b896;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:100px;cursor:pointer;transition:all .3s ease;margin-top:8px}
+.back-btn:hover{background:rgba(255,255,255,.1);color:#fbbf24}
+.back-btn svg{width:16px;height:16px;fill:currentColor}
+.dashboard-screen{align-items:center;transform:translate3d(100%,0,0);padding:30px 16px 100px;gap:20px;overflow-y:auto}
+.dashboard-screen.active{transform:translate3d(0,0,0)}
+.dashboard-header{width:100%;max-width:700px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;position:relative}
+.dashboard-header h2{font-size:clamp(1.2rem,4vw,1.5rem);font-weight:700;color:#fff;text-shadow:0 0 12px rgba(255,255,255,.3)}
+.dashboard-header .user-info{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.dashboard-header .user-info span{color:#d4b896;font-size:.9rem}
+.logout-btn{padding:8px 16px;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:.85rem;font-weight:600;color:#ef4444;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:10px;cursor:pointer;transition:all .3s ease}
+.logout-btn:hover{background:rgba(239,68,68,.2)}
+.members-list{width:100%;max-width:700px;background:rgba(255,255,255,.03);backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,.08);border-radius:20px;box-shadow:0 25px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06);overflow:hidden}
+.member-item{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;padding:16px 18px;transition:all .3s ease;position:relative;cursor:pointer;gap:14px}
+.member-item > .member-info{grid-column:1;min-width:0}
+.member-item > .member-points{grid-column:2;justify-self:center}
+.member-item > .member-actions{grid-column:3}
+.member-item .member-text{align-items:flex-start}
+.member-item .member-name{justify-content:flex-start}
+.member-item .member-name-text{text-align:right}
+.member-item .member-rank{text-align:right}.member-item .member-points{min-width:86px;text-align:center;padding:7px 12px}.member-item .member-actions{min-width:max-content}.member-item .member-info{min-width:0}.member-item .member-name-text{display:flex;align-items:center;gap:8px}.group-badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;background:rgba(217,119,6,.12);border:1px solid rgba(217,119,6,.25);color:#fbbf24;font-size:.7rem;font-weight:700;white-space:nowrap;flex:0 0 auto}.member-item .member-name-icons{margin-right:4px}
+.member-item.item-enter{animation:itemPop .45s cubic-bezier(.22,1,.36,1) both}
+@media(max-width:700px){.member-item{grid-template-columns:minmax(0,1fr) auto;gap:10px 12px}.member-item > .member-info{grid-column:1}.member-item > .member-points{grid-column:2}.member-item > .member-actions{grid-column:1 / -1;justify-content:flex-start}.member-item .member-rank{max-width:100%}}
+.member-item:hover{background:rgba(255,255,255,.06)}
+.member-item:not(:last-child)::after{content:'';position:absolute;bottom:0;left:18px;right:18px;height:1px;background:rgba(255,255,255,.06)}
+.member-info{display:flex;align-items:center;gap:12px;flex-direction:row-reverse;flex:1 1 100%;min-width:0}
+.member-avatar{width:48px;height:48px;background:rgba(231,166,74,.15);border:1px solid rgba(231,166,74,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.member-avatar svg{width:24px;height:24px;fill:#E7A64A}
+.member-text{display:flex;flex-direction:column;gap:2px;align-items:flex-end;min-width:0;flex:1}
+.member-name{font-size:1rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px;justify-content:space-between;width:100%}
+.member-name-text{white-space:normal;word-break:break-word;overflow-wrap:break-word;flex:1;min-width:0;text-align:right}
+.member-name-icons{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.edit-x{width:18px;height:18px;cursor:pointer;opacity:.5;transition:all .2s ease;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center}
+.edit-x:hover{opacity:1;transform:scale(1.2)}
+.edit-x svg{width:14px;height:14px;fill:#3b82f6}
+.delete-x{width:18px;height:18px;cursor:pointer;opacity:.5;transition:all .2s ease;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center}
+.delete-x:hover{opacity:1;transform:scale(1.2)}
+.delete-x svg{width:14px;height:14px;fill:#ef4444}
+.member-rank{font-size:.78rem;font-weight:500;color:#d4b896;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.member-points{font-size:.9rem;font-weight:700;color:#fbbf24;background:rgba(251,191,36,.1);padding:2px 10px;border-radius:100px;border:1px solid rgba(251,191,36,.2);white-space:nowrap;flex-shrink:0}
+.member-actions{display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+.action-btn{width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s ease;flex-shrink:0}
+.action-btn svg{width:18px;height:18px;fill:#fff}
+.action-btn:hover{transform:scale(1.15)}
+.btn-minus{background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4);box-shadow:0 0 8px rgba(239,68,68,.2)}
+.btn-minus:hover{background:rgba(239,68,68,.35);box-shadow:0 0 16px rgba(239,68,68,.4)}
+.btn-plus{background:rgba(34,197,94,.2);border:1px solid rgba(34,197,94,.4);box-shadow:0 0 8px rgba(34,197,94,.2)}
+.btn-plus:hover{background:rgba(34,197,94,.35);box-shadow:0 0 16px rgba(34,197,94,.4)}
+.btn-notes{background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.4);box-shadow:0 0 8px rgba(59,130,246,.2)}
+.btn-notes:hover{background:rgba(59,130,246,.35);box-shadow:0 0 16px rgba(59,130,246,.4)}
+.btn-edit{background:rgba(139,92,246,.2);border:1px solid rgba(139,92,246,.4);box-shadow:0 0 8px rgba(139,92,246,.2)}
+.btn-edit:hover{background:rgba(139,92,246,.35);box-shadow:0 0 16px rgba(139,92,246,.4)}
+.btn-edit svg{fill:#c4b5fd}
+.control-panel-btn{position:fixed;bottom:24px;left:24px;z-index:100;padding:12px 20px;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:.9rem;font-weight:700;color:#fbbf24;background:rgba(217,119,6,.15);border:1px solid rgba(217,119,6,.3);border-radius:14px;cursor:pointer;transition:all .3s ease;backdrop-filter:blur(10px);display:none;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.control-panel-btn.visible{display:flex}
+.control-panel-btn:hover{background:rgba(217,119,6,.3);transform:translateY(-2px)}
+.control-panel-btn svg{width:18px;height:18px;fill:currentColor}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s ease;padding:16px}
+.confirm-overlay{z-index:250}
+.confirm-modal{background:rgba(26,18,8,.98);border:1px solid rgba(239,68,68,.3);max-width:360px;text-align:center;padding:36px 28px}
+.confirm-modal .confirm-icon{width:56px;height:56px;background:rgba(239,68,68,.15);border:2px solid rgba(239,68,68,.4);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 0 24px rgba(239,68,68,.2)}
+.confirm-modal .confirm-icon svg{width:28px;height:28px;fill:#ef4444}
+.confirm-modal .confirm-title{font-size:1.3rem;font-weight:700;color:#fff;margin-bottom:8px}
+.confirm-modal .confirm-msg{font-size:.95rem;color:#d4b896;margin-bottom:28px;line-height:1.6}
+.confirm-actions{display:flex;gap:12px;justify-content:center}
+.confirm-btn{padding:12px 28px;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:1rem;font-weight:700;border:none;border-radius:12px;cursor:pointer;transition:all .3s ease;flex:1}
+.confirm-btn-cancel{background:rgba(255,255,255,.08);color:#d4b896;border:1px solid rgba(255,255,255,.12)}
+.confirm-btn-cancel:hover{background:rgba(255,255,255,.15);color:#fff}
+.confirm-btn-delete{background:linear-gradient(135deg,#dc2626,#ef4446);color:#fff;box-shadow:0 8px 24px rgba(220,38,38,.35)}
+.confirm-btn-delete:hover{background:linear-gradient(135deg,#ef4444,#f87171);transform:translateY(-2px);box-shadow:0 12px 32px rgba(220,38,38,.45)}
+.modal-overlay.active{opacity:1;pointer-events:all}
+.modal{width:100%;max-width:400px;max-height:90vh;overflow-y:auto;background:rgba(26,18,8,.95);backdrop-filter:blur(40px);border-radius:24px;padding:28px;box-shadow:0 25px 60px rgba(0,0,0,.6);transform:scale(.9) translateY(20px);transition:all .3s cubic-bezier(.34,1.56,.64,1);border:1px solid rgba(255,255,255,.1)}
+.modal-overlay.active .modal{transform:scale(1) translateY(0)}
+.modal.red{border-color:rgba(239,68,68,.3)}
+.modal.red .modal-title{color:#ef4444}
+.modal.red .modal-submit{background:#dc2626;box-shadow:0 8px 24px rgba(220,38,38,.4)}
+.modal.red .modal-submit:hover{background:#ef4444}
+.modal.green{border-color:rgba(34,197,94,.3)}
+.modal.green .modal-title{color:#22c55e}
+.modal.green .modal-submit{background:#16a34a;box-shadow:0 8px 24px rgba(22,163,74,.4)}
+.modal.green .modal-submit:hover{background:#22c55e}
+.modal.blue{border-color:rgba(59,130,246,.3)}
+.modal.blue .modal-title{color:#3b82f6}
+.modal.blue .modal-submit{background:#2563eb;box-shadow:0 8px 24px rgba(37,99,235,.4)}
+.modal.blue .modal-submit:hover{background:#3b82f6}
+.modal.purple{border-color:rgba(139,92,246,.3)}
+.modal.purple .modal-title{color:#c4b5fd}
+.modal.purple .modal-submit{background:#7c3aed;box-shadow:0 8px 24px rgba(124,58,237,.4)}
+.modal.purple .modal-submit:hover{background:#8b5cf6}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.modal-title{font-size:1.2rem;font-weight:700}
+.modal-close{width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,.05);color:#d4b896;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s ease}
+.modal-close:hover{background:rgba(255,255,255,.1);color:#fff}
+.modal-close svg{width:18px;height:18px;fill:currentColor}
+.modal-body{display:flex;flex-direction:column;gap:16px}
+.modal-body label{font-size:.85rem;font-weight:600;color:#d4b896;margin-bottom:-10px}
+.modal-body input,.modal-body textarea,.modal-body select{width:100%;padding:14px 16px;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:.95rem;color:#fff;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;outline:none;transition:all .3s ease;text-align:right}
+.modal-body select option{background:#1a1208;color:#fff}
+.modal-body textarea{min-height:80px;resize:vertical}
+.modal-body input:focus,.modal-body textarea:focus,.modal-body select:focus{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.07)}
+.modal-body input::placeholder,.modal-body textarea::placeholder{color:rgba(212,184,150,.4)}
+.modal-submit{width:100%;padding:14px;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:1rem;font-weight:700;color:#fff;border:none;border-radius:12px;cursor:pointer;margin-top:4px;transition:all .3s ease}
+.control-screen{align-items:center;transform:translateY(100%);padding:30px 16px 100px;gap:20px;overflow-y:auto}
+.control-screen.active{transform:translateY(0)}
+.control-tabs{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;justify-content:center}
+.control-tab{padding:10px 18px;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:.85rem;font-weight:600;color:#d4b896;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;cursor:pointer;transition:all .3s ease;display:flex;align-items:center;gap:6px}
+.control-tab:hover{background:rgba(255,255,255,.1)}
+.control-tab.active{background:rgba(217,119,6,.2);border-color:rgba(217,119,6,.4);color:#fbbf24}
+.control-tab svg{width:16px;height:16px;fill:currentColor}
+.control-content{width:100%;max-width:700px;display:none}
+.control-content.active{display:block}
+@keyframes itemPop{0%{opacity:0;transform:translateY(14px) scale(.96)}100%{opacity:1;transform:translateY(0) scale(1)}}
+#membersList,#groupsMainList,.control-content{will-change:opacity,transform}
+.control-card{background:rgba(255,255,255,.03);backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:32px;box-shadow:0 25px 60px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.02);margin-bottom:20px}
+.control-card h3{font-size:1.15rem;font-weight:700;color:#fff;margin-bottom:24px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px}
+.control-card h3 svg{width:18px;height:18px;fill:#fbbf24}
+.add-form{display:flex;flex-direction:column;gap:12px}
+.add-form input,.add-form select{width:100%;padding:16px 18px;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:1rem;color:#fff;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px;outline:none;text-align:right;transition:all .3s ease}
+.add-form select option{background:#1a1208;color:#fff}
+.add-form input::placeholder{color:rgba(212,184,150,.4)}
+.add-form input:focus,.add-form select:focus{border-color:rgba(217,119,6,.5);box-shadow:0 0 0 3px rgba(217,119,6,.15),0 4px 20px rgba(217,119,6,.08);background:rgba(255,255,255,.07)}
+.empty-state{text-align:center;padding:30px;color:rgba(212,184,150,.5);font-size:1rem;font-family:'IBM Plex Sans Arabic',sans-serif;font-weight:500}
+.search-box{width:100%;padding:14px 16px 14px 44px;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:.95rem;color:#fff;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;outline:none;text-align:right;position:relative}
+.search-box::placeholder{color:rgba(212,184,150,.4)}
+.search-box:focus{border-color:rgba(217,119,6,.5);box-shadow:0 0 0 3px rgba(217,119,6,.15);background:rgba(255,255,255,.07)}
+.search-wrap{position:relative;width:100%}
+.search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;fill:rgba(212,184,150,.5);pointer-events:none}
+.search-results{display:flex;flex-direction:column;gap:8px}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100px);z-index:300;display:flex;align-items:center;gap:10px;padding:14px 24px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);border-radius:14px;color:#fca5a5;font-size:.95rem;font-weight:600;backdrop-filter:blur(20px);box-shadow:0 10px 30px rgba(239,68,68,.2);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;max-width:92vw;touch-action:pan-y;cursor:grab}
+.toast.success{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#86efac;box-shadow:0 10px 30px rgba(34,197,94,.2)}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast svg{width:20px;height:20px;fill:#ef4444;flex-shrink:0}
+.toast.success svg{fill:#22c55e}
+.log-section{width:100%;max-width:700px;background:rgba(255,255,255,.03);backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,.08);border-radius:20px;box-shadow:0 25px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06);overflow:hidden;max-height:350px;display:flex;flex-direction:column}
+.log-header{padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.log-header h3{font-size:1rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px}
+.log-header h3 svg{width:18px;height:18px;fill:#fbbf24}
+.log-list{overflow-y:auto;padding:8px 0;max-height:300px}
+.log-item{padding:8px 18px;font-size:.82rem;color:#d4b896;border-bottom:1px solid rgba(255,255,255,.03);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px}
+.log-item:last-child{border-bottom:none}
+.log-time{color:rgba(212,184,150,.5);font-size:.75rem}
+.log-item .log-action{font-weight:600}
+.log-item .log-action.minus{color:#ef4444}
+.log-item .log-action.plus{color:#22c55e}
+.log-item .log-action.note{color:#3b82f6}
+.assistant-card{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:20px;margin-bottom:12px}
+.assistant-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.assistant-card-name{font-size:1.05rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px;justify-content:space-between;width:100%}
+.assistant-card-name-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;text-align:right}
+.assistant-card-perms{display:flex;flex-wrap:wrap;gap:6px}
+.assistant-perm-tag{font-size:.75rem;padding:4px 10px;border-radius:100px;background:rgba(217,119,6,.1);border:1px solid rgba(217,119,6,.25);color:#fbbf24}
+.perm-section-title{font-size:1rem;font-weight:700;color:#fbbf24;margin:20px 0 14px;padding-right:10px;border-right:3px solid #d97706;text-shadow:0 0 8px rgba(251,191,36,.2)}
+.perm-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.perm-card{padding:16px 18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;cursor:pointer;transition:all .25s ease;display:flex;align-items:center;gap:14px;position:relative;overflow:hidden}
+.perm-card:hover{background:rgba(217,119,6,.06);border-color:rgba(217,119,6,.2);transform:translateY(-1px);box-shadow:0 4px 16px rgba(217,119,6,.08)}
+.perm-card input{position:absolute;opacity:0;width:0;height:0;cursor:pointer}
+.perm-card label{font-size:.9rem;color:#d4b896;cursor:pointer;flex:1;font-weight:500;order:2}
+.perm-check{width:24px;height:24px;border:2px solid rgba(255,255,255,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;transition:all .3s cubic-bezier(.34,1.56,.64,1);background:rgba(255,255,255,.03);flex-shrink:0;order:1}
+.perm-check svg{width:14px;height:14px;fill:#fff;opacity:0;transform:scale(0);transition:all .25s cubic-bezier(.34,1.56,.64,1)}
+.perm-card.selected{background:rgba(217,119,6,.12);border-color:rgba(217,119,6,.5);box-shadow:0 0 20px rgba(217,119,6,.15),inset 0 1px 0 rgba(255,255,255,.05)}
+.perm-card.selected .perm-check{background:#d97706;border-color:#d97706;box-shadow:0 0 12px rgba(217,119,6,.4)}
+.perm-card.selected .perm-check svg{opacity:1;transform:scale(1)}
+.remember-wrap{display:flex;align-items:center;justify-content:flex-start;gap:10px;margin:16px 0 8px;cursor:pointer;user-select:none}
+.remember-wrap input{display:none}
+.remember-box{width:22px;height:22px;border:2px solid rgba(217,119,6,.5);border-radius:6px;display:flex;align-items:center;justify-content:center;transition:all .3s ease;background:rgba(217,119,6,.1);position:relative}
+.remember-box svg{width:14px;height:14px;fill:#fff;opacity:0;transform:scale(.5);transition:all .2s cubic-bezier(.34,1.56,.64,1)}
+.remember-wrap input:checked + .remember-box{background:#d97706;border-color:#d97706;box-shadow:0 0 12px rgba(217,119,6,.4)}
+.remember-wrap input:checked + .remember-box svg{opacity:1;transform:scale(1)}
+.remember-text{font-size:.9rem;color:#d4b896;font-weight:500;transition:color .3s ease}
+.remember-wrap:hover .remember-text{color:#fbbf24}
+.member-detail-screen{align-items:center;transform:translateX(100%);padding:30px 16px 100px;gap:20px;overflow-y:auto}
+.member-detail-screen.active{transform:translateX(0)}
+.member-detail-header{width:100%;max-width:700px;display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-bottom:8px}
+.member-detail-header h2{font-size:clamp(1.2rem,4vw,1.5rem);font-weight:700;color:#fff;text-shadow:0 0 12px rgba(255,255,255,.3)}
+.detail-actions{width:100%;max-width:700px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px}
+.detail-action-btn{padding:16px 12px;border-radius:16px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);backdrop-filter:blur(20px);cursor:pointer;transition:all .3s ease;display:flex;flex-direction:column;align-items:center;gap:8px;color:#fff;font-family:'IBM Plex Sans Arabic',sans-serif}
+.detail-action-btn:hover{transform:translateY(-3px)}
+.detail-action-btn svg{width:28px;height:28px}
+.detail-action-btn.points-btn{border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.08)}
+.detail-action-btn.points-btn:hover{background:rgba(34,197,94,.15);box-shadow:0 8px 24px rgba(34,197,94,.2)}
+.detail-action-btn.minus-btn{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
+.detail-action-btn.minus-btn:hover{background:rgba(239,68,68,.15);box-shadow:0 8px 24px rgba(239,68,68,.2)}
+.detail-action-btn.notes-btn{border-color:rgba(59,130,246,.3);background:rgba(59,130,246,.08)}
+.detail-action-btn.notes-btn:hover{background:rgba(59,130,246,.15);box-shadow:0 8px 24px rgba(59,130,246,.2)}
+.detail-action-btn span{font-size:.85rem;font-weight:700}
+.detail-action-btn.active{transform:scale(.95);opacity:.8}
+.detail-log-section{width:100%;max-width:700px;background:rgba(255,255,255,.03);backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,.08);border-radius:20px;box-shadow:0 25px 60px rgba(0,0,0,.5);overflow:hidden;display:flex;flex-direction:column;max-height:450px}
+.detail-log-header{padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:center}
+.detail-log-header h3{font-size:1rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px}
+.detail-log-header h3 svg{width:18px;height:18px;fill:#fbbf24}
+.detail-log-list{overflow-y:auto;padding:8px 0;max-height:400px}
+.member-profile-card{width:100%;max-width:700px;background:rgba(255,255,255,.03);backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:24px;box-shadow:0 25px 60px rgba(0,0,0,.5);display:flex;align-items:center;gap:16px;flex-direction:row-reverse;flex-wrap:wrap;margin-bottom:12px}
+.member-profile-avatar{width:64px;height:64px;background:rgba(231,166,74,.15);border:2px solid rgba(231,166,74,.4);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 20px rgba(231,166,74,.2)}
+.member-profile-avatar svg{width:32px;height:32px;fill:#E7A64A}
+.member-profile-info{display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex:1;min-width:150px}
+.member-profile-name{font-size:1.3rem;font-weight:700;color:#fff}
+.member-profile-rank{font-size:.9rem;color:#d4b896}
+.member-profile-points{font-size:1.1rem;font-weight:700;color:#fbbf24;background:rgba(251,191,36,.1);padding:4px 14px;border-radius:100px;border:1px solid rgba(251,191,36,.2)}
+.search-result-card{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;cursor:pointer;transition:all .3s cubic-bezier(.34,1.56,.64,1);flex-direction:row-reverse;gap:12px;margin-bottom:8px;flex-wrap:wrap}
+.search-result-card:hover{background:rgba(255,255,255,.08);border-color:rgba(217,119,6,.4);transform:translateY(-2px) scale(1.01);box-shadow:0 8px 32px rgba(217,119,6,.15)}
+.search-result-card .src-avatar{width:44px;height:44px;background:rgba(231,166,74,.15);border:1px solid rgba(231,166,74,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.search-result-card .src-avatar svg{width:22px;height:22px;fill:#E7A64A}
+.search-result-card .src-info{display:flex;flex-direction:column;gap:3px;align-items:flex-end;flex:1;min-width:0}
+.search-result-card .src-name{font-size:1.05rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.search-result-card .src-rank{font-size:.8rem;color:#d4b896}
+.search-result-card .src-points{font-size:1.1rem;font-weight:700;color:#fbbf24;background:rgba(251,191,36,.1);padding:4px 14px;border-radius:100px;border:1px solid rgba(251,191,36,.2);white-space:nowrap;flex-shrink:0}
+.log-item-with-delete{display:flex;align-items:center;justify-content:space-between;padding:8px 18px;font-size:.82rem;color:#d4b896;border-bottom:1px solid rgba(255,255,255,.03);transition:background .2s ease;flex-wrap:wrap;gap:4px}
+.log-item-with-delete:hover{background:rgba(255,255,255,.03)}
+.log-item-with-delete:last-child{border-bottom:none}
+.log-item-with-delete .log-left{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.log-item-with-delete .log-left > div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.log-item-with-delete .log-delete-btn{width:24px;height:24px;border-radius:6px;border:none;background:rgba(239,68,68,.1);color:#ef4444;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s ease;flex-shrink:0;margin-right:8px}
+.log-item-with-delete .log-delete-btn:hover{background:rgba(239,68,68,.3);transform:scale(1.1)}
+.log-item-with-delete .log-delete-btn svg{width:14px;height:14px;fill:currentColor}
+.confirm-modal.warn{border-color:rgba(245,158,11,.3)}
+.confirm-modal.warn .confirm-icon{background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.4);box-shadow:0 0 24px rgba(245,158,11,.2)}
+.confirm-modal.warn .confirm-icon svg{fill:#f59e0b}
+.confirm-modal.warn .confirm-btn-delete{background:linear-gradient(135deg,#d97706,#f59e0b);box-shadow:0 8px 24px rgba(217,119,6,.35)}
+.confirm-modal.warn .confirm-btn-delete:hover{background:linear-gradient(135deg,#f59e0b,#fbbf24);box-shadow:0 12px 32px rgba(217,119,6,.45)}
+.confirm-modal.info{border-color:rgba(59,130,246,.3)}
+.confirm-modal.info .confirm-icon{background:rgba(59,130,246,.15);border-color:rgba(59,130,246,.4);box-shadow:0 0 24px rgba(59,130,246,.2)}
+.confirm-modal.info .confirm-icon svg{fill:#3b82f6}
+.confirm-modal.info .confirm-btn-delete{background:linear-gradient(135deg,#2563eb,#3b82f6);box-shadow:0 8px 24px rgba(37,99,235,.35)}
+.confirm-modal.info .confirm-btn-delete:hover{background:linear-gradient(135deg,#3b82f6,#60a5fa);box-shadow:0 12px 32px rgba(37,99,235,.45)}
+.btn-press{transition:transform 0.15s cubic-bezier(.34,1.56,.64,1),box-shadow 0.15s ease}
+.btn-press:active{transform:scale(0.92)!important}
+.list-item{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:12px;margin-bottom:8px;cursor:pointer;transition:all .2s ease;flex-wrap:wrap;gap:8px}
+.list-item:hover{background:rgba(255,255,255,.05);border-color:rgba(217,119,6,.2)}
+.list-item-info{display:flex;flex-direction:column;gap:2px;align-items:flex-end;flex:1;min-width:120px}
+.list-item-name{font-size:.95rem;font-weight:600;color:#fff;display:flex;align-items:center;gap:8px;justify-content:space-between;width:100%}
+.list-item-name-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;text-align:right}
+.list-item-sub{font-size:.78rem;color:#d4b896}
+.group-badge{font-size:.75rem;padding:2px 8px;border-radius:100px;background:rgba(217,119,6,.15);border:1px solid rgba(217,119,6,.3);color:#fbbf24;margin-left:6px;display:inline-block}
+@media(max-width:480px){
+.home-screen{padding:30px 20px;gap:28px}
+.subtitle{font-size:1rem}
+.login-btn{padding:18px 52px;font-size:1.15rem}
+.logo-ring{width:130px;height:130px}
+.logo-inner{width:80px;height:80px}
+.logo-inner svg{width:36px;height:36px}
+.badge{font-size:.9rem;padding:8px 18px}
+.login-card{padding:32px 24px}
+.login-header h2{font-size:1.5rem}
+.member-item{padding:14px 16px;gap:10px}
+.member-name{font-size:1rem}
+.delete-x,.edit-x{width:20px;height:20px}
+.delete-x svg,.edit-x svg{width:15px;height:15px}
+.member-rank{font-size:.82rem}
+.member-points{font-size:.92rem;padding:3px 10px}
+.action-btn{width:32px;height:32px}
+.action-btn svg{width:16px;height:16px}
+.dashboard-screen,.control-screen,.member-detail-screen{padding:24px 12px 100px}
+.control-tab{padding:8px 14px;font-size:.8rem}
+.control-panel-btn{bottom:16px;left:16px;padding:10px 16px;font-size:.8rem}
+.perm-grid{grid-template-columns:1fr}
+.detail-actions{grid-template-columns:1fr}
+.member-profile-card{padding:18px;gap:12px}
+.member-profile-avatar{width:52px;height:52px}
+.member-profile-avatar svg{width:26px;height:26px}
+.member-profile-name{font-size:1.1rem}
+.search-result-card{padding:12px 14px}
+.search-result-card .src-avatar{width:38px;height:38px}
+.search-result-card .src-avatar svg{width:18px;height:18px}
+.search-result-card .src-name{font-size:.9rem}
+.search-result-card .src-points{font-size:.9rem;padding:2px 10px}
+.modal{padding:22px 18px}
+}
+@media(min-width:1200px){
+body{font-size:18px}
+.subtitle{font-size:1.3rem}
+.login-btn{padding:22px 72px;font-size:1.35rem}
+.members-list,.log-section,.control-content,.member-detail-screen .detail-log-section,.member-detail-screen .member-profile-card,.member-detail-header,.detail-actions{max-width:800px}
+.member-item{padding:16px 22px}
+.member-name{font-size:1.1rem}
+.member-rank{font-size:.85rem}
+}
+.group-picker{position:relative;width:100%}
+.group-picker-trigger{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 18px;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:1rem;color:#fff;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px;cursor:pointer;transition:all .3s ease;text-align:right}
+.group-picker-trigger:hover,.group-picker.open .group-picker-trigger{background:rgba(255,255,255,.08);border-color:rgba(217,119,6,.45);box-shadow:0 0 0 3px rgba(217,119,6,.1)}
+.group-picker-trigger .picker-arrow{transition:transform .25s ease;color:#d4b896}
+.group-picker.open .picker-arrow{transform:rotate(180deg)}
+.group-picker-menu{position:absolute;z-index:500;top:calc(100% + 8px);right:0;left:0;background:rgba(26,18,8,.98);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:8px;box-shadow:0 20px 50px rgba(0,0,0,.55);display:none;max-height:260px;overflow:auto;backdrop-filter:blur(30px)}
+.group-picker.open .group-picker-menu{display:block;animation:pickerIn .2s ease}
+@keyframes pickerIn{from{opacity:0;transform:translateY(-6px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.group-picker-option{display:flex;align-items:center;justify-content:space-between;width:100%;padding:12px 14px;border:0;border-radius:11px;background:transparent;color:#d4b896;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:.9rem;cursor:pointer;text-align:right;transition:all .2s ease}
+.group-picker-option:hover{background:rgba(217,119,6,.12);color:#fff}
+.group-picker-option.selected{background:rgba(217,119,6,.16);color:#fbbf24}
+.group-picker-option .picker-count{font-size:.75rem;opacity:.65}
+.group-points{font-size:.9rem;font-weight:700;color:#fbbf24;background:rgba(251,191,36,.1);padding:4px 11px;border-radius:100px;border:1px solid rgba(251,191,36,.2);white-space:nowrap}
+.log-delete-btn{display:none!important}
+.log-delete-btn.can-delete-log{display:flex!important}
+/* FINAL MEMBER META FIX */
+#membersList .member-name-main{display:flex;align-items:baseline;justify-content:flex-start;direction:rtl;gap:10px;width:100%;min-width:0}
+#membersList .member-name-text{color:#fff !important;font-size:1.08rem;font-weight:700;line-height:1.35;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto}
+#membersList .member-role-inline{color:rgba(212,184,150,.62);font-size:.74rem;font-weight:500;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto}
+#membersList .member-group-row{margin-top:5px;display:flex;justify-content:flex-start}
+#membersList .member-group-row .group-badge{font-size:.68rem;padding:3px 9px}
+#membersList .member-text{align-items:flex-start}
+#membersList .member-name-text,#groupsMainList .member-name-text,#controlMembersList .member-name-text{color:#fff !important}
+#membersList .member-rank,#groupsMainList .member-rank,#controlMembersList .member-rank{color:#d4b896 !important}
+</style>
+<style>
+.member-name-main{display:flex;align-items:baseline;justify-content:flex-start;gap:9px;min-width:0;width:100%}.member-role-inline{font-size:.72rem;font-weight:500;color:rgba(212,184,150,.62);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.member-group-row{margin-top:5px}.member-group-row .group-badge{margin-left:0;font-size:.7rem;padding:2px 9px}.control-card .member-item{cursor:default}.control-card .member-item:hover{background:rgba(255,255,255,.035)}
+@media(max-width:700px){.member-name-main{gap:6px}.member-role-inline{font-size:.68rem}}
+</style>
+
+<style id="mobile-scroll-fix">
+/* MOBILE SCROLL FIX */
+@media (max-width: 700px){
+html{height:100%;min-height:100%;overflow:hidden;}
+body{height:100%;min-height:100%;overflow:hidden;position:fixed;inset:0;touch-action:pan-y;}
+.screen{
+height:100dvh;
+min-height:100dvh;
+max-height:none;
+overflow-x:hidden !important;
+overflow-y:auto !important;
+-webkit-overflow-scrolling:touch;
+overscroll-behavior-y:auto;
+touch-action:pan-y;
+padding-bottom:120px !important;
+}
+.dashboard-screen,.control-screen,.member-detail-screen{
+overflow-y:auto !important;
+-webkit-overflow-scrolling:touch;
+touch-action:pan-y;
+}
+.members-list{overflow:visible !important;height:auto;max-height:none;}
+.control-panel-btn{position:fixed;z-index:50;}
+/* Mobile groups view: let the groups panel fully expand without overlapping the dashboard. */
+#groupsMainList{width:100%;max-width:100%;height:auto;max-height:none;overflow:visible;}
+#membersList{width:100%;max-width:100%;height:auto;max-height:none;overflow:visible;}
+#mainSearchWrap{width:100%;}
+}
+</style>
+<style>
+/* Keep the group picker in normal document flow on phones so it does not overlap controls below. */
+@media (max-width: 700px){
+  .group-picker.open .group-picker-menu{
+    position:relative !important;
+    top:auto !important; right:auto !important; left:auto !important;
+    width:100%; margin-top:8px; z-index:auto !important;
+  }
+}
+</style>
+
+<style id="member-detail-scroll-final-fix">
+/* MEMBER DETAILS: always allow the page itself to scroll */
+.member-detail-screen{
+  height:100vh !important;
+  height:100dvh !important;
+  min-height:100vh !important;
+  min-height:100dvh !important;
+  overflow-x:hidden !important;
+  overflow-y:scroll !important;
+  overscroll-behavior-y:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+  touch-action:pan-y !important;
+  padding-bottom:180px !important;
+}
+.member-detail-screen > *{flex-shrink:0;}
+
+/* On phones, expand the history and let the whole member-details page scroll naturally */
+@media (max-width:700px){
+  .member-detail-screen{
+    padding-bottom:180px !important;
+    overscroll-behavior-y:auto !important;
+  }
+  .member-detail-screen .detail-log-section{
+    max-height:none !important;
+    overflow:visible !important;
+    margin-bottom:40px !important;
+  }
+  .member-detail-screen .detail-log-list{
+    max-height:none !important;
+    overflow:visible !important;
+    padding-bottom:24px !important;
+  }
+}
+</style>
+
+
+<style id="remove-background-member-text-fix">
+#membersList .member-group-row:empty{display:block !important;height:22px !important;margin-top:5px !important;}
+#membersList .member-group-spacer{display:block !important;height:22px !important;visibility:hidden !important;user-select:none !important;}
+#membersList .member-group-empty{display:none !important;}
+#membersList .member-item .member-group-row [data-no-group-text]{display:none !important;}
+</style>
+
+<style id="member-group-spacer-fix">
+/* Keep blank space under members with no group */
+.member-group-spacer{min-height:24px;}
+</style>
+<style id="global-ibm-plex-font">
+/* Apply IBM Plex Sans Arabic to every text-bearing element in the app. */
+*,*::before,*::after{
+  font-family:'IBM Plex Sans Arabic',sans-serif !important;
+}
+</style>
+<style id="member-role-layout-fix">
+#membersList .member-name-main.no-group,
+#controlMembersList .member-name-main.no-group{
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:flex-start;
+  gap:2px;
+}
+#membersList .member-name-main.no-group .member-role-below,
+#controlMembersList .member-name-main.no-group .member-role-below{
+  display:block;
+  width:100%;
+  overflow:visible;
+  white-space:nowrap;
+  text-overflow:clip;
+}
+#membersList .member-name-main.has-group .member-role-inline,
+#controlMembersList .member-name-main.has-group .member-role-inline{
+  flex:0 1 auto;
+}
+</style>
+</head>
+<body>
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+<div class="bg-orb bg-orb-3"></div>
+<div class="grid-bg"></div>
+<div class="home-screen screen active" id="homeScreen">
+<div class="logo-ring">
+<svg viewBox="0 0 120 120" fill="none">
+<circle cx="60" cy="60" r="55" stroke="rgba(251,191,36,0.2)" stroke-width="1" stroke-dasharray="4 4"/>
+<circle cx="60" cy="60" r="45" stroke="rgba(251,191,36,0.3)" stroke-width="1.5"/>
+<circle cx="60" cy="60" r="35" stroke="rgba(217,119,6,0.2)" stroke-width="1" stroke-dasharray="8 4"/>
+</svg>
+<div class="logo-inner">
+<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+</div>
+</div>
+<div class="text-content">
+<div class="badge">نظام إدارة الأعضاء</div>
+<h1 class="main-title">مرحبا بكم في<br><span>لوحة متابعة الأعضاء</span></h1>
+<p class="subtitle">منصة متكاملة لمتابعة نشاطات الأعضاء، ادارة البيانات، وتحليل الاداء بكل سهولة</p>
+</div>
+<button class="login-btn btn-press" id="loginBtn" onclick="showScreen('login')">
+<span>تسجيل دخول</span>
+<svg viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+</button>
+</div>
+<div class="login-screen screen" id="loginScreen">
+<div class="login-card">
+<div class="login-header">
+<h2>تسجيل الدخول</h2>
+<p>ادخل بياناتك للوصول الى لوحة التحكم</p>
+</div>
+<form id="loginForm">
+<div class="form-group">
+<label for="username">اسم المستخدم</label>
+<input type="text" id="username" name="username" placeholder="ادخل اسم المستخدم" required>
+</div>
+<div class="form-group">
+<label for="password">كلمة المرور</label>
+<input type="password" id="password" name="password" placeholder="ادخل كلمة المرور" required>
+</div>
+<label class="remember-wrap">
+<input type="checkbox" id="rememberMe">
+<span class="remember-box">
+<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+</span>
+<span class="remember-text">تذكرني</span>
+</label>
+<button type="submit" class="submit-btn btn-press">دخول</button>
+</form>
+</div>
+<button class="back-btn btn-press" id="backBtn" onclick="showScreen('home')">
+<svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+<span>رجوع</span>
+</button>
+</div>
+<div class="dashboard-screen screen" id="dashboardScreen">
+<div class="dashboard-header">
+<h2 id="mainListTitle">قائمة الأعضاء</h2>
+<div class="user-info">
+<span id="currentUserName">المستخدم</span>
+<button class="logout-btn btn-press" id="logoutBtn">خروج</button>
+</div>
+</div>
+<div class="control-tabs" style="margin-bottom:12px; width:100%; max-width:700px;">
+<button class="control-tab active btn-press" id="mainTabMembers" onclick="switchMainTab('members')">
+<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+<span>الأعضاء</span>
+</button>
+<button class="control-tab btn-press" id="mainTabGroups" onclick="switchMainTab('groups')">
+<svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+<span>المجموعات</span>
+</button>
+</div>
+<div class="search-wrap" style="width:100%;max-width:700px;margin-bottom:4px" id="mainSearchWrap">
+<svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+<input type="text" class="search-box" id="mainMemberSearch" placeholder="ابحث عن عضو بالاسم أو المنصب..." oninput="searchMainMembers()">
+</div>
+<div class="search-results" id="mainSearchResults" style="width:100%;max-width:700px"></div>
+<div class="members-list" id="membersList"></div>
+<div class="members-list" id="groupsMainList" style="display:none;"></div>
+</div>
+<div class="member-detail-screen screen" id="memberDetailScreen">
+<div class="member-detail-header">
+<h2>تفاصيل العضو</h2>
+<div class="user-info">
+<button class="logout-btn btn-press" id="detailBackBtn" style="color:#d4b896;border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.05)" onclick="goBackFromDetail()">رجوع للقائمة</button>
+</div>
+</div>
+<div class="member-profile-card" id="memberProfileCard"></div>
+<div class="detail-actions">
+<button class="detail-action-btn points-btn btn-press" id="btnFilterPlus" onclick="filterDetailLog('plus')">
+<svg viewBox="0 0 24 24" fill="#22c55e"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+<span>سجل النقاط</span>
+</button>
+<button class="detail-action-btn minus-btn btn-press" id="btnFilterMinus" onclick="filterDetailLog('minus')">
+<svg viewBox="0 0 24 24" fill="#ef4444"><path d="M19 13H5v-2h14v2z"/></svg>
+<span>سجل الخصم</span>
+</button>
+<button class="detail-action-btn notes-btn btn-press" id="btnFilterNote" onclick="filterDetailLog('note')">
+<svg viewBox="0 0 24 24" fill="#3b82f6"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+<span>الملاحظات</span>
+</button>
+</div>
+<div style="width:100%;max-width:700px;display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px" id="detailQuickActions"></div>
+<div id="detailDeleteWrap" style="width:100%;max-width:700px;margin-bottom:12px;display:none">
+<button class="submit-btn btn-press" style="background:linear-gradient(135deg,#dc2626,#ef4444);box-shadow:0 8px 24px rgba(220,38,38,.4)" onclick="deleteMemberFromDetail()">
+<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:#fff;display:inline-block;vertical-align:middle;margin-left:8px"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+حذف العضو
+</button>
+</div>
+<div class="detail-log-section">
+<div class="detail-log-header"><h3><svg viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>سجل الاحداث</h3><span style="color:rgba(212,184,150,.5);font-size:.8rem" id="detailLogFilterLabel">الكل</span></div>
+<div class="detail-log-list" id="detailLogList"></div>
+</div>
+</div>
+<div class="member-detail-screen screen" id="groupDetailScreen">
+<div class="member-detail-header">
+<div><h2 id="groupDetailTitle">تفاصيل المجموعة</h2><div id="groupDetailPoints" class="group-points" style="display:inline-flex;margin-top:8px">0 نقطة للمجموعة</div></div>
+<div class="user-info">
+<button class="logout-btn btn-press" style="color:#d4b896;border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.05)" onclick="showScreen('dashboard','back')">رجوع للقائمة</button>
+</div>
+</div>
+<div style="width:100%;max-width:700px;display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px" id="groupQuickActions"></div>
+<div class="members-list" id="groupDetailMembersList"></div>
+</div>
+<div class="control-screen screen" id="controlScreen">
+<div class="dashboard-header">
+<h2>لوحة التحكم</h2>
+<div class="user-info">
+<button class="logout-btn btn-press" id="controlBackBtn" onclick="showScreen('dashboard')">رجوع للقائمة</button>
+</div>
+</div>
+<div class="control-tabs">
+<button class="control-tab active btn-press" data-tab="members" onclick="switchControlTab('members')">
+<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+<span>الأعضاء</span>
+</button>
+<button class="control-tab btn-press" data-tab="groups" onclick="switchControlTab('groups')">
+<svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+<span>المجموعات</span>
+</button>
+<button class="control-tab btn-press" data-tab="assistants" onclick="switchControlTab('assistants')">
+<svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+<span>المساعدين</span>
+</button>
+<button class="control-tab btn-press" data-tab="addAssistant" onclick="switchControlTab('addAssistant')">
+<svg viewBox="0 0 24 24"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+<span>اضافة مساعد</span>
+</button>
+<button class="control-tab btn-press" data-tab="logs" onclick="switchControlTab('logs')">
+<svg viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+<span>سجل الاحداث</span>
+</button>
+</div>
+<div class="control-content active" id="tab-members">
+<div class="control-card">
+<h3><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>بحث عن عضو</h3>
+<div class="search-wrap">
+<svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+<input type="text" class="search-box" id="memberSearch" placeholder="اكتب اسم العضو..." oninput="searchMembers()">
+</div>
+<div class="search-results" id="searchResults"></div>
+</div>
+<div class="control-card">
+<h3><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>اضافة عضو جديد</h3>
+<div class="add-form">
+<input type="text" id="newMemberName" placeholder="اسم العضو">
+<input type="text" id="newMemberRank" placeholder="المنصب / المهنة">
+<div id="newMemberGroup"></div>
+<button class="submit-btn btn-press" id="addMemberBtn" onclick="addNewMember()">اضافة عضو</button>
+</div>
+</div>
+<div class="control-card">
+<h3><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>قائمة الاعضاء</h3>
+<div id="controlMembersList"></div>
+</div>
+</div>
+<div class="control-content" id="tab-groups">
+<div class="control-card">
+<h3><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>إضافة مجموعة جديدة</h3>
+<div class="add-form">
+<input type="text" id="newGroupName" placeholder="اسم المجموعة">
+<button class="submit-btn btn-press" id="addGroupBtn" onclick="addNewGroup()">إضافة مجموعة</button>
+</div>
+</div>
+<div class="control-card">
+<h3><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>قائمة المجموعات</h3>
+<div id="controlGroupsList"></div>
+</div>
+</div>
+<div class="control-content" id="tab-assistants">
+<div class="control-card">
+<h3><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>قائمة المساعدين</h3>
+<div id="controlAssistantsList"></div>
+</div>
+</div>
+<div class="control-content" id="tab-addAssistant">
+<div class="control-card">
+<h3><svg viewBox="0 0 24 24"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>اضافة مساعد جديد</h3>
+<div class="add-form">
+<input type="text" id="newAssistantName" placeholder="اسم المستخدم">
+<input type="password" id="newAssistantPass" placeholder="كلمة المرور">
+<div class="perm-section-title">اختر الصلاحيات</div>
+<div class="perm-grid">
+<div class="perm-card" onclick="togglePerm(this,'add_points')">
+<input type="checkbox" id="perm_add_points" value="add_points">
+<span class="perm-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+<label for="perm_add_points">اضافة نقاط</label>
+</div>
+<div class="perm-card" onclick="togglePerm(this,'remove_points')">
+<input type="checkbox" id="perm_remove_points" value="remove_points">
+<span class="perm-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+<label for="perm_remove_points">خصم نقاط</label>
+</div>
+<div class="perm-card" onclick="togglePerm(this,'add_members')">
+<input type="checkbox" id="perm_add_members" value="add_members">
+<span class="perm-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+<label for="perm_add_members">اضافة اعضاء</label>
+</div>
+<div class="perm-card" onclick="togglePerm(this,'remove_members')">
+<input type="checkbox" id="perm_remove_members" value="remove_members">
+<span class="perm-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+<label for="perm_remove_members">ازالة اعضاء</label>
+</div>
+<div class="perm-card" onclick="togglePerm(this,'edit_members')">
+<input type="checkbox" id="perm_edit_members" value="edit_members">
+<span class="perm-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+<label for="perm_edit_members">تعديل بيانات الأعضاء</label>
+</div>
+<div class="perm-card" onclick="togglePerm(this,'add_assistants')">
+<input type="checkbox" id="perm_add_assistants" value="add_assistants">
+<span class="perm-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+<label for="perm_add_assistants">اضافة مساعدين</label>
+</div>
+<div class="perm-card" onclick="togglePerm(this,'add_groups')">
+<input type="checkbox" id="perm_add_groups" value="add_groups">
+<span class="perm-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+<label for="perm_add_groups">إضافة مجموعات</label>
+</div>
+<div class="perm-card" onclick="togglePerm(this,'remove_groups')">
+<input type="checkbox" id="perm_remove_groups" value="remove_groups">
+<span class="perm-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+<label for="perm_remove_groups">حذف مجموعات</label>
+</div>
+<div class="perm-card" onclick="togglePerm(this,'delete_logs')">
+<input type="checkbox" id="perm_delete_logs" value="delete_logs">
+<span class="perm-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+<label for="perm_delete_logs">حذف السجل</label>
+</div>
+</div>
+<button class="submit-btn btn-press" id="addAssistantBtn" onclick="addNewAssistant()">اضافة مساعد</button>
+</div>
+</div>
+</div>
+<div class="control-content" id="tab-logs">
+<div class="log-section">
+<div class="log-header"><h3><svg viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>سجل الاحداث</h3><button id="clearAllLogsBtn" class="logout-btn btn-press" onclick="clearAllLogsPrompt()" style="color:#ef4444;border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.1);font-size:.78rem;padding:6px 12px">حذف الكل</button></div>
+<div class="log-list" id="controlLogList"></div>
+</div>
+</div>
+</div>
+<button class="control-panel-btn btn-press" id="controlPanelBtn" onclick="showScreen('control')">
+<svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84a.484.484 0 0 0-.48.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.488.488 0 0 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.27.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+<span>لوحة التحكم</span>
+</button>
+<div class="modal-overlay" id="modalOverlay">
+<div class="modal" id="modal">
+<div class="modal-header">
+<span class="modal-title" id="modalTitle">العنوان</span>
+<button class="modal-close btn-press" id="modalClose" onclick="closeModal()">
+<svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+</button>
+</div>
+<div class="modal-body" id="modalBody"></div>
+</div>
+</div>
+<div class="modal-overlay confirm-overlay" id="confirmOverlay">
+<div class="modal confirm-modal" id="confirmModal">
+<div class="confirm-icon"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></div>
+<div class="confirm-title" id="confirmTitle">تأكيد</div>
+<div class="confirm-msg" id="confirmMsg">هل انت متأكد؟</div>
+<div class="confirm-actions">
+<button class="confirm-btn confirm-btn-cancel btn-press" onclick="closeConfirm()">الغاء</button>
+<button class="confirm-btn confirm-btn-delete btn-press" onclick="executeDelete()">تأكيد</button>
+</div>
+</div>
+</div>
+<div class="toast" id="errorToast"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg><span id="toastMsg">خطأ</span></div>
+<script>
+// ===== FIREBASE CONFIG =====
+const firebaseConfig = {
+apiKey: "AIzaSyBwMGPOckg7Dx5Z53oAUaez71pxBn1Ge3c",
+authDomain: "aad1-b41d0.firebaseapp.com",
+databaseURL: "https://aad1-b41d0-default-rtdb.firebaseio.com/",
+projectId: "aad1-b41d0",
+storageBucket: "aad1-b41d0.firebasestorage.app",
+messagingSenderId: "470436569479",
+appId: "1:470436569479:web:members-dashboard"
+};
+// Initialize Firebase safely — if the CDN scripts fail to load (no internet,
+// opened from a local file browser, a sandboxed preview with no network, etc.)
+// the app must still work fully offline using localStorage only.
+// This runs from DOMContentLoaded (below) rather than immediately, because the
+// firebase <script> tags are loaded with `defer` so the page never blocks on
+// them — that means `firebase` isn't guaranteed to exist until then.
+let firebaseAvailable = false;
+let db = null;
+let dbRef = null;
+function setupFirebase() {
+try {
+if (typeof firebase !== 'undefined') {
+firebase.initializeApp(firebaseConfig);
+db = firebase.database();
+dbRef = db.ref('membersApp');
+firebaseAvailable = true;
+} else {
+console.warn('Firebase SDK not loaded — running in offline/local mode.');
+}
+} catch (e) {
+console.error('Firebase init failed — running in offline/local mode.', e);
+firebaseAvailable = false;
+db = null;
+dbRef = null;
+}
+}
+// ===== LOCAL STORAGE =====
+const Store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}},set(k,v){localStorage.setItem(k,JSON.stringify(v))}};
+// ===== DEFAULT DATA =====
+const defaultMembers=[
+{id:1,name:'نايف العتيبي',rank:'مطور واجهات امامية',points:100,groupId:1},
+{id:2,name:'فهد السلمي',rank:'مصمم جرافيك',points:85,groupId:1},
+{id:3,name:'عبدالله الشمري',rank:'مدير مشروع',points:120,groupId:2},
+{id:4,name:'سعد المطيري',rank:'مطور Backend',points:95,groupId:2}
+];
+const defaultGroups=[
+{id:1,name:'فريق التطوير',points:0},
+{id:2,name:'فريق الإدارة',points:0}
+];
+const defaultAssistants=[
+{id:1,username:'Naif',password:'0Naif1',permissions:['add_points','remove_points','add_members','remove_members','edit_members','add_assistants','add_groups','remove_groups','delete_logs']}
+];
+const defaultLogs=[
+{id:Date.now()+1,action:'اضافة 10 نقاط',memberName:'نايف العتيبي',details:'مشاركة فعالة',type:'plus',memberId:1,time:new Date().toLocaleString('ar-SA')},
+{id:Date.now()+2,action:'خصم 5 نقاط',memberName:'نايف العتيبي',details:'تأخر',type:'minus',memberId:1,time:new Date().toLocaleString('ar-SA')},
+{id:Date.now()+3,action:'ملاحظة',memberName:'نايف العتيبي',details:'يحتاج متابعة',type:'note',memberId:1,time:new Date().toLocaleString('ar-SA')},
+{id:Date.now()+4,action:'اضافة 15 نقاط',memberName:'فهد السلمي',details:'تصميم ممتاز',type:'plus',memberId:2,time:new Date().toLocaleString('ar-SA')},
+{id:Date.now()+5,action:'اضافة 20 نقاط',memberName:'عبدالله الشمري',details:'انجاز المشروع',type:'plus',memberId:3,time:new Date().toLocaleString('ar-SA')},
+{id:Date.now()+6,action:'ملاحظة',memberName:'سعد المطيري',details:'اداء جيد',type:'note',memberId:4,time:new Date().toLocaleString('ar-SA')}
+];
+// ===== STATE =====
+let members = [];
+let groups = [];
+let assistants = [];
+let logs = [];
+let currentUser = Store.get('currentUser',null);
+let rememberUser = Store.get('rememberUser',null);
+let currentMemberId = null;
+let currentGroupModalId = null;
+let currentModalType = null;
+let currentDetailFilter = 'all';
+let firebaseConnected = false;
+let dataInitialized = false;
+let confirmCallback = null;
+let selectedPermissions = [];
+let activeMainTab = 'members';
+let detailOrigin = 'dashboard';
+let currentGroupDetailId = null;
+// ===== DATA NORMALIZATION =====
+function normalizeState() {
+members = (members || []).map(m => ({...m, points: Number.isFinite(Number(m.points)) ? Number(m.points) : 0, groupId: m.groupId === '' || m.groupId == null ? null : Number(m.groupId)}));
+groups = (groups || []).map(g => ({...g, points: Number.isFinite(Number(g.points)) ? Number(g.points) : 0}));
+assistants = (assistants || [])
+.filter(a => String(a.username || '').trim().toLowerCase() !== 'admin')
+.map(a => ({...a, permissions: Array.isArray(a.permissions) ? [...a.permissions] : []}));
+logs = Array.isArray(logs) ? logs : [];
+// Legacy accounts had no knowledge of the newly-added permissions. Keep
+// existing full-access assistants working after the upgrade.
+assistants.forEach(a => {
+if(a.permissions.includes('add_assistants') && a.permissions.includes('edit_members')) {
+['add_groups','remove_groups','delete_logs'].forEach(p => { if(!a.permissions.includes(p)) a.permissions.push(p); });
+}
+});
+if(currentUser) {
+const fresh = assistants.find(a => Number(a.id) === Number(currentUser.id));
+if(fresh) currentUser = fresh;
+else currentUser = null;
+}
+}
+// ===== HELPER FUNCTIONS =====
+function formatPoints(value) { const n = Number(value); return Number.isFinite(n) ? n : 0; }
+function esc(str) {
+if (!str) return '';
+return String(str).replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"');
+}
+let toastTimeout = null;
+let toastTouchStartY = null;
+let toastDragY = 0;
+function showToast(msg, type = 'error') {
+const toast = document.getElementById('errorToast');
+const toastMsg = document.getElementById('toastMsg');
+if(!toast || !toastMsg) return;
+toastMsg.textContent = msg;
+if(type === 'success') toast.classList.add('success');
+else toast.classList.remove('success');
+toast.style.transition = '';
+toast.style.transform = '';
+toast.style.opacity = '';
+toast.classList.add('show');
+clearTimeout(toastTimeout);
+toastTimeout = setTimeout(dismissToast, 3000);
+}
+function dismissToast() {
+const toast = document.getElementById('errorToast');
+if(!toast) return;
+clearTimeout(toastTimeout);
+toast.style.transition = '';
+toast.style.transform = '';
+toast.style.opacity = '';
+toast.classList.remove('show');
+}
+// swipe the toast up on mobile to dismiss it early
+function setupToastSwipe() {
+const toast = document.getElementById('errorToast');
+if(!toast) return;
+toast.addEventListener('touchstart', e => {
+if(!toast.classList.contains('show')) return;
+toastTouchStartY = e.touches[0].clientY;
+toastDragY = 0;
+clearTimeout(toastTimeout);
+toast.style.transition = 'none';
+}, {passive:true});
+toast.addEventListener('touchmove', e => {
+if(toastTouchStartY === null) return;
+const delta = e.touches[0].clientY - toastTouchStartY;
+if(delta < 0) {
+toastDragY = delta;
+toast.style.transform = `translateX(-50%) translateY(${delta}px)`;
+toast.style.opacity = String(Math.max(1 - Math.abs(delta) / 70, .1));
+}
+}, {passive:true});
+toast.addEventListener('touchend', () => {
+if(toastTouchStartY === null) return;
+toast.style.transition = 'all .3s cubic-bezier(.34,1.56,.64,1)';
+if(toastDragY < -36) {
+dismissToast();
+} else {
+toast.style.transform = '';
+toast.style.opacity = '';
+toastTimeout = setTimeout(dismissToast, 1500);
+}
+toastTouchStartY = null;
+toastDragY = 0;
+});
+}
+function hasPerm(perm) {
+if(!currentUser) return false;
+if(currentUser.username === 'Naif') return true;
+return currentUser.permissions && currentUser.permissions.includes(perm);
+}
+// ===== SAVE TO FIREBASE =====
+function saveAll() {
+normalizeState();
+window._lastLocalUpdate = Date.now();
+Store.set('members', members);
+Store.set('groups', groups);
+Store.set('assistants', assistants);
+Store.set('logs', logs);
+if(firebaseAvailable && firebaseConnected && dbRef) {
+dbRef.set({
+members: members,
+groups: groups,
+assistants: assistants,
+logs: logs,
+lastUpdate: window._lastLocalUpdate
+}).catch(err => console.error('Firebase save error:', err));
+}
+}
+// ===== LOAD FROM FIREBASE =====
+function initFirebase() {
+function loadLocalOnly() {
+members = Store.get('members', defaultMembers);
+groups = Store.get('groups', defaultGroups);
+groups = (groups || []).map(g => ({...g, points: Number(g.points) || 0}));
+members = (members || []).map(m => ({...m, points: formatPoints(m.points)}));
+assistants = Store.get('assistants', defaultAssistants);
+logs = Store.get('logs', defaultLogs);
+normalizeState();
+dataInitialized = true;
+
+if(currentUser) {
+  document.getElementById('currentUserName').textContent = currentUser.username;
+  showScreen('dashboard');
+  renderMembers();
+  renderMainGroups();
+  populateGroupSelects();
+}
+
+}
+if(!firebaseAvailable || !dbRef) {
+loadLocalOnly();
+return;
+}
+dbRef.once('value').then(snapshot => {
+const data = snapshot.val();
+if(data && data.members && data.members.length > 0) {
+members = data.members || defaultMembers;
+groups = (data.groups || defaultGroups).map(g => ({...g, points: Number(g.points) || 0}));
+members = (data.members || defaultMembers).map(m => ({...m, points: formatPoints(m.points)}));
+assistants = data.assistants || defaultAssistants;
+logs = data.logs || defaultLogs;
+normalizeState();
+} else {
+members = Store.get('members', defaultMembers);
+groups = Store.get('groups', defaultGroups);
+assistants = Store.get('assistants', defaultAssistants);
+logs = Store.get('logs', defaultLogs);
+normalizeState();
+saveAll();
+}
+
+firebaseConnected = true;
+dataInitialized = true;
+
+dbRef.on('value', snapshot => {
+  const newData = snapshot.val();
+  if(!newData) return;
+  if(newData.lastUpdate && newData.lastUpdate > (window._lastLocalUpdate || 0) + 1000) {
+    members = newData.members || members;
+    groups = newData.groups || groups;
+    assistants = newData.assistants || assistants;
+    logs = newData.logs || logs;
+    normalizeState();
+
+    if(document.getElementById('dashboardScreen').classList.contains('active')) {
+      renderMembers();
+      renderMainGroups();
+    }
+    if(document.getElementById('controlScreen').classList.contains('active')) {
+      renderControlMembers();
+      renderControlGroups();
+      renderControlAssistants();
+      renderControlLogs();
+      populateGroupSelects();
+    }
+    if(document.getElementById('memberDetailScreen').classList.contains('active') && currentMemberId) {
+      filterDetailLog(currentDetailFilter);
+    }
+    if(document.getElementById('groupDetailScreen').classList.contains('active') && currentGroupDetailId) {
+      renderGroupDetail(currentGroupDetailId);
+    }
+  }
+});
+
+if(currentUser) {
+  document.getElementById('currentUserName').textContent = currentUser.username;
+  showScreen('dashboard');
+  renderMembers();
+  renderMainGroups();
+  populateGroupSelects();
+}
+
+}).catch(err => {
+console.error('Firebase init error:', err);
+loadLocalOnly();
+});
+}
+// ===== SMOOTH PANEL TRANSITIONS =====
+// staggered pop-in for list rows whenever a panel becomes visible
+function animateListIn(container) {
+if(!container) return;
+const items = container.querySelectorAll('.member-item, .log-item-with-delete');
+items.forEach((el, i) => {
+el.style.animation = 'none';
+void el.offsetWidth;
+el.style.animation = 'itemPop .42s cubic-bezier(.22,1,.36,1) both';
+el.style.animationDelay = `${Math.min(i * 35, 350)}ms`;
+});
+}
+// crossfade + slide between two sibling panels (used for the members/groups switch)
+function crossfadeSwitch(hideEl, showEl, renderFn) {
+const reveal = () => {
+if(hideEl) hideEl.style.display = 'none';
+if(!showEl) return;
+showEl.style.transition = 'none';
+showEl.style.display = 'block';
+showEl.style.opacity = '0';
+showEl.style.transform = 'translateY(12px)';
+void showEl.offsetWidth;
+if(renderFn) renderFn();
+requestAnimationFrame(() => {
+showEl.style.transition = 'opacity .38s cubic-bezier(.22,1,.36,1), transform .38s cubic-bezier(.22,1,.36,1)';
+showEl.style.opacity = '1';
+showEl.style.transform = 'translateY(0)';
+animateListIn(showEl);
+});
+};
+if(hideEl) {
+hideEl.style.transition = 'opacity .16s ease, transform .16s ease';
+hideEl.style.opacity = '0';
+hideEl.style.transform = 'translateY(-8px)';
+setTimeout(reveal, 140);
+} else {
+reveal();
+}
+}
+// ===== SCREENS =====
+const homeScreen = document.getElementById('homeScreen');
+const loginScreen = document.getElementById('loginScreen');
+const dashboardScreen = document.getElementById('dashboardScreen');
+const controlScreen = document.getElementById('controlScreen');
+const memberDetailScreen = document.getElementById('memberDetailScreen');
+const groupDetailScreen = document.getElementById('groupDetailScreen');
+const controlPanelBtn = document.getElementById('controlPanelBtn');
+function showScreen(name, direction) {
+const allScreens = [homeScreen, loginScreen, dashboardScreen, controlScreen, memberDetailScreen, groupDetailScreen];
+allScreens.forEach(s => { if(s) s.classList.remove('active'); });
+function activate(el) {
+if(!el) return;
+if(direction === 'back') {
+el.classList.add('enter-left');
+el.classList.add('active');
+// force a reflow so the browser registers the left position before we
+// remove it — this is what makes the slide-in-from-left animate smoothly
+void el.offsetWidth;
+el.classList.remove('enter-left');
+} else {
+el.classList.add('active');
+}
+}
+if(name === 'home' && homeScreen) activate(homeScreen);
+if(name === 'login' && loginScreen) activate(loginScreen);
+if(name === 'dashboard' && dashboardScreen) {
+activate(dashboardScreen);
+if(controlPanelBtn) controlPanelBtn.classList.add('visible');
+}
+if(name === 'control' && controlScreen) {
+activate(controlScreen);
+if(controlPanelBtn) controlPanelBtn.classList.add('visible');
+// defer the heavy list rendering one frame so the slide-up transition
+// starts immediately instead of jumping after all the lists rebuild
+requestAnimationFrame(() => {
+renderControlMembers();
+renderControlGroups();
+renderControlAssistants();
+renderControlLogs();
+populateGroupSelects();
+animateListIn(document.querySelector('.control-content.active'));
+});
+}
+if(name === 'detail' && memberDetailScreen) {
+activate(memberDetailScreen);
+if(controlPanelBtn) controlPanelBtn.classList.add('visible');
+}
+if(name === 'groupDetail' && groupDetailScreen) {
+activate(groupDetailScreen);
+if(controlPanelBtn) controlPanelBtn.classList.add('visible');
+}
+}
+// ===== LOGIN =====
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+e.preventDefault();
+const u = document.getElementById('username').value.trim();
+const p = document.getElementById('password').value.trim();
+const rem = document.getElementById('rememberMe').checked;
+const found = assistants.find(a => a.username.toLowerCase() === u.toLowerCase() && a.password === p);
+if(found) {
+currentUser = found;
+Store.set('currentUser', currentUser);
+if(rem) Store.set('rememberUser', currentUser);
+else Store.set('rememberUser', null);
+
+document.getElementById('currentUserName').textContent = currentUser.username;
+// Prepare the next screen before the transition starts. This prevents
+// synchronous list rendering from competing with the login animation.
+renderMembers();
+renderMainGroups();
+populateGroupSelects();
+requestAnimationFrame(() => {
+  showScreen('dashboard');
+  requestAnimationFrame(() => animateListIn(document.getElementById('membersList')));
+});
+showToast('تم تسجيل الدخول بنجاح', 'success');
+
+} else {
+showToast('اسم المستخدم أو كلمة المرور غير صحيحة');
+}
+});
+document.getElementById('logoutBtn').addEventListener('click', function() {
+currentUser = null;
+Store.set('currentUser', null);
+Store.set('rememberUser', null);
+if(controlPanelBtn) controlPanelBtn.classList.remove('visible');
+showScreen('home');
+showToast('تم تسجيل الخروج بنجاح', 'success');
+});
+// ===== MAIN DASHBOARD TABS =====
+function switchMainTab(tab) {
+if(activeMainTab === tab) return;
+activeMainTab = tab;
+const membersTab = document.getElementById('mainTabMembers');
+const groupsTab = document.getElementById('mainTabGroups');
+membersTab.classList.toggle('active', tab === 'members');
+groupsTab.classList.toggle('active', tab === 'groups');
+const mSearch = document.getElementById('mainSearchWrap');
+const mList = document.getElementById('membersList');
+const gList = document.getElementById('groupsMainList');
+const mTitle = document.getElementById('mainListTitle');
+const isMobile = window.matchMedia('(max-width: 700px)').matches;
+// On mobile use a direct swap so the panel height recalculates immediately;
+// this prevents the groups list from being clipped or overlapping the page.
+if(isMobile){
+[mList,gList].forEach(el => {
+if(!el) return;
+el.style.transition = 'opacity .2s ease, transform .2s ease';
+el.style.transform = 'none';
+});
+if(tab === 'members'){
+mSearch.style.display = 'block';
+mTitle.textContent = 'قائمة الأعضاء';
+gList.style.display = 'none';
+mList.style.display = 'block';
+renderMembers();
+}else{
+mSearch.style.display = 'none';
+mTitle.textContent = 'قائمة المجموعات';
+mList.style.display = 'none';
+gList.style.display = 'block';
+renderMainGroups();
+gList.scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+requestAnimationFrame(() => animateListIn(tab === 'members' ? mList : gList));
+return;
+}
+if(tab === 'members') {
+mSearch.style.display = 'block';
+mTitle.textContent = 'قائمة الأعضاء';
+crossfadeSwitch(gList, mList, renderMembers);
+} else {
+mSearch.style.display = 'none';
+mTitle.textContent = 'قائمة المجموعات';
+crossfadeSwitch(mList, gList, renderMainGroups);
+}
+}
+function renderMainGroups() {
+const container = document.getElementById('groupsMainList');
+if(!container) return;
+if(!groups || groups.length === 0) {
+container.innerHTML = '<div class="empty-state">لا توجد مجموعات مضافة</div>';
+return;
+}
+let html = '';
+groups.forEach(g => {
+const count = members.filter(m => Number(m.groupId) === Number(g.id)).length;
+html += `
+<div class="member-item" onclick="openGroupDetail(${g.id})">
+<div class="member-info">
+<div class="member-avatar">
+<svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+</div>
+<div class="member-text">
+<div class="member-name">
+<span class="member-name-text">${esc(g.name)}</span>
+</div>
+<div class="member-rank">عدد الأعضاء: ${count}</div>
+</div>
+</div>
+<div class="group-points">${Number(g.points)||0} نقطة للمجموعة</div>
+<div class="member-actions" onclick="event.stopPropagation()">
+${hasPerm('add_points') ? `<button class="action-btn btn-plus btn-press" onclick="openGroupModal('groupPlus',${g.id})" title="إضافة نقاط للمجموعة"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>` : ''}
+${hasPerm('remove_points') ? `<button class="action-btn btn-minus btn-press" onclick="openGroupModal('groupMinus',${g.id})" title="خصم نقاط من المجموعة"><svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg></button>` : ''}
+<button class="action-btn btn-notes btn-press" onclick="openGroupModal('groupNote',${g.id})" title="ملاحظة للمجموعة"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg></button>
+</div>
+</div>
+`;
+});
+container.innerHTML = html;
+}
+function openGroupDetail(groupId) {
+currentGroupDetailId = groupId;
+showScreen('groupDetail');
+requestAnimationFrame(() => renderGroupDetail(groupId));
+}
+function renderGroupDetail(groupId) {
+const g = groups.find(x => Number(x.id) === Number(groupId));
+if(!g) return;
+document.getElementById('groupDetailTitle').textContent = g.name;
+document.getElementById('groupDetailPoints').textContent = `${Number(g.points)||0} نقطة للمجموعة`;
+const quickActions = document.getElementById('groupQuickActions');
+if(quickActions) {
+let qHtml = '';
+if(hasPerm('add_points')) {
+qHtml += `<button class="submit-btn btn-press" style="flex:1;background:linear-gradient(135deg,#16a34a,#22c55e);margin-top:0" onclick="openGroupModal('groupPlus',${g.id})">إضافة نقاط للمجموعة</button>`;
+}
+if(hasPerm('remove_points')) {
+qHtml += `<button class="submit-btn btn-press" style="flex:1;background:linear-gradient(135deg,#dc2626,#ef4444);margin-top:0" onclick="openGroupModal('groupMinus',${g.id})">خصم نقاط من المجموعة</button>`;
+}
+qHtml += `<button class="submit-btn btn-press" style="flex:1;background:linear-gradient(135deg,#2563eb,#3b82f6);margin-top:0" onclick="openGroupModal('groupNote',${g.id})">ملاحظة لكل المجموعة</button>`;
+quickActions.innerHTML = qHtml;
+}
+const container = document.getElementById('groupDetailMembersList');
+if(!container) return;
+const groupMembers = members.filter(m => Number(m.groupId) === Number(groupId));
+if(groupMembers.length === 0) {
+container.innerHTML = '<div class="empty-state">لا يوجد أعضاء في هذه المجموعة</div>';
+return;
+}
+let html = '';
+groupMembers.forEach(m => {
+const editBtnHtml = hasPerm('edit_members') ? `<div class="edit-x" onclick="event.stopPropagation(); openEditModal(${m.id})" title="تعديل"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></div>` : '';
+const deleteBtnHtml = hasPerm('remove_members') ? `<div class="delete-x" onclick="event.stopPropagation(); promptDeleteMember(${m.id})" title="حذف"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></div>` : '';
+
+html += `
+  <div class="member-item" onclick="openMemberDetail(${m.id}, 'groupDetail')">
+    <div class="member-info">
+      <div class="member-avatar">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      </div>
+      <div class="member-text">
+        <div class="member-name">
+          <span class="member-name-text">${esc(m.name)}</span>
+          <div class="member-name-icons">
+            ${editBtnHtml}
+            ${deleteBtnHtml}
+          </div>
+        </div>
+        <div class="member-rank">${esc(m.rank || 'عضو')}</div>
+      </div>
+    </div>
+    <div class="member-points">${formatPoints(m.points)} نقطة</div>
+    <div class="member-actions" onclick="event.stopPropagation()">
+      ${hasPerm('add_points') ? `<button class="action-btn btn-plus btn-press" onclick="openModal('plus',${m.id})" title="إضافة نقاط"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>` : ''}
+      ${hasPerm('remove_points') ? `<button class="action-btn btn-minus btn-press" onclick="openModal('minus',${m.id})" title="خصم نقاط"><svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg></button>` : ''}
+      <button class="action-btn btn-notes btn-press" onclick="openModal('note',${m.id})" title="ملاحظة"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg></button>
+    </div>
+  </div>
+`;
+
+});
+container.innerHTML = html;
+}
+// ===== RENDER MEMBERS =====
+function renderMembers() {
+const container = document.getElementById('membersList');
+if(!container) return;
+if(!Array.isArray(members) || members.length === 0) {
+container.innerHTML = '<div class="empty-state">لا يوجد أعضاء مضافين</div>';
+return;
+}
+let html = '';
+members.forEach(m => {
+const grp = groups.find(g => Number(g.id) === Number(m.groupId));
+const groupHtml = grp
+  ? `<div class="member-group-row"><span class="group-badge">${esc(grp.name)}</span></div>`
+  : '';
+const roleHtml = grp
+  ? `<span class="member-role-inline">${esc(m.rank || 'عضو')}</span>`
+  : `<span class="member-role-inline member-role-below">${esc(m.rank || 'عضو')}</span>`;
+html += `
+<div class="member-item" onclick="openMemberDetail(${m.id}, 'dashboard')">
+<div class="member-info">
+<div class="member-text">
+<div class="member-name-main ${grp ? 'has-group' : 'no-group'}">
+<span class="member-name-text">${esc(m.name)}</span>
+${roleHtml}
+</div>
+${groupHtml}
+</div>
+</div>
+<div class="member-points">${formatPoints(m.points)} نقطة</div>
+<div class="member-actions" onclick="event.stopPropagation()">
+${hasPerm('add_points') ? `<button class="action-btn btn-plus btn-press" onclick="openModal('plus',${m.id})" title="إضافة نقاط"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>` : ''}
+${hasPerm('remove_points') ? `<button class="action-btn btn-minus btn-press" onclick="openModal('minus',${m.id})" title="خصم نقاط"><svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg></button>` : ''}
+<button class="action-btn btn-notes btn-press" onclick="openModal('note',${m.id})" title="ملاحظة"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg></button>
+</div>
+</div>`;
+});
+container.innerHTML = html;
+}
+// ===== SEARCH MAIN MEMBERS =====
+function searchMainMembers() {
+const query = document.getElementById('mainMemberSearch').value.trim().toLowerCase();
+const resultsDiv = document.getElementById('mainSearchResults');
+const listDiv = document.getElementById('membersList');
+if(!query) { resultsDiv.innerHTML=''; listDiv.style.display='block'; return; }
+listDiv.style.display='none';
+const filtered = members.filter(m => String(m.name||'').toLowerCase().includes(query) || String(m.rank||'').toLowerCase().includes(query));
+if(filtered.length===0){ resultsDiv.innerHTML='<div class="empty-state">لا توجد نتائج مطابقة</div>'; return; }
+resultsDiv.innerHTML = filtered.map(m=>{
+const grp=groups.find(g=>Number(g.id)===Number(m.groupId));
+return `<div class="search-result-card btn-press" onclick="openMemberDetail(${m.id}, 'dashboard')">
+<div class="src-info"><div class="src-name">${esc(m.name)}</div><div class="src-rank">${esc(m.rank||'عضو')} ${grp?`<span class="group-badge">${esc(grp.name)}</span>`:''}</div></div>
+<div class="src-points">${formatPoints(m.points)} نقطة</div>
+</div>`;
+}).join('');
+}
+// ===== CONTROL SCREEN TABS =====
+function switchControlTab(tab) {
+const activeContent = document.querySelector('.control-content.active');
+const newContent = document.getElementById(`tab-${tab}`);
+if(activeContent === newContent) return;
+document.querySelectorAll('.control-tab').forEach(b => b.classList.remove('active'));
+const btn = document.querySelector(`.control-tab[data-tab="${tab}"]`);
+if(btn) btn.classList.add('active');
+const reveal = () => {
+if(activeContent) {
+activeContent.classList.remove('active');
+activeContent.style.cssText = '';
+}
+if(!newContent) return;
+newContent.classList.add('active');
+if(tab === 'members') renderControlMembers();
+if(tab === 'groups') renderControlGroups();
+if(tab === 'assistants') renderControlAssistants();
+if(tab === 'logs') renderControlLogs();
+newContent.style.transition = 'none';
+newContent.style.opacity = '0';
+newContent.style.transform = 'translateY(14px) scale(.97)';
+void newContent.offsetWidth;
+requestAnimationFrame(() => {
+newContent.style.transition = 'opacity .4s cubic-bezier(.22,1,.36,1), transform .4s cubic-bezier(.22,1,.36,1)';
+newContent.style.opacity = '1';
+newContent.style.transform = 'translateY(0) scale(1)';
+animateListIn(newContent);
+setTimeout(() => { newContent.style.cssText = ''; }, 420);
+});
+};
+if(activeContent) {
+activeContent.style.transition = 'opacity .16s ease, transform .16s ease';
+activeContent.style.opacity = '0';
+activeContent.style.transform = 'translateY(-10px) scale(.98)';
+setTimeout(reveal, 140);
+} else {
+reveal();
+}
+}
+// ===== POPULATE GROUP SELECTS =====
+function buildGroupPicker(targetId, selectedId = null) {
+const target = document.getElementById(targetId);
+if(!target) return;
+const selected = selectedId == null || selectedId === '' ? null : Number(selectedId);
+const selectedGroup = groups.find(g => Number(g.id) === selected);
+const options = [
+`<button type="button" class="group-picker-option ${!selectedGroup ? 'selected' : ''}" onclick="selectGroupPicker('${targetId}', '')"><span>بدون مجموعة</span></button>`,
+...groups.map(g => `<button type="button" class="group-picker-option ${selectedGroup && Number(g.id) === Number(selectedGroup.id) ? 'selected' : ''}" onclick="selectGroupPicker('${targetId}', '${g.id}')"><span>${esc(g.name)}</span><span class="picker-count">${members.filter(m=>Number(m.groupId)===Number(g.id)).length} أعضاء</span></button>`)
+].join('');
+target.innerHTML = `
+<input type="hidden" id="${targetId}Value" value="${selectedGroup ? selectedGroup.id : ''}">
+<div class="group-picker" id="${targetId}Picker">
+<button type="button" class="group-picker-trigger" onclick="toggleGroupPicker('${targetId}')">
+<span id="${targetId}Label">${selectedGroup ? esc(selectedGroup.name) : 'بدون مجموعة'}</span>
+<span class="picker-arrow">⌄</span>
+</button>
+<div class="group-picker-menu">${options}</div>
+</div>`;
+}
+function toggleGroupPicker(targetId){
+const picker = document.getElementById(targetId + 'Picker');
+if(picker) picker.classList.toggle('open');
+}
+function selectGroupPicker(targetId, value){
+const hidden = document.getElementById(targetId + 'Value');
+if(hidden) hidden.value = value;
+buildGroupPicker(targetId, value);
+}
+function populateGroupSelects() {
+buildGroupPicker('newMemberGroup', '');
+}
+// ===== CONTROL MEMBERS =====
+function renderControlMembers() {
+const container = document.getElementById('controlMembersList');
+if(!container) return;
+if(!members || members.length === 0) {
+container.innerHTML = '<div class="empty-state">لا يوجد أعضاء</div>';
+return;
+}
+let html = '';
+members.forEach(m => {
+const grp = groups.find(g => Number(g.id) === Number(m.groupId));
+const groupBadge = grp ? `<span class="group-badge">${esc(grp.name)}</span>` : '';
+const roleHtml = grp
+  ? `<span class="member-role-inline">${esc(m.rank || 'عضو')}</span>`
+  : `<span class="member-role-inline member-role-below">${esc(m.rank || 'عضو')}</span>`;
+html += `
+<div class="member-item">
+<div class="member-info">
+<div class="member-text">
+<div class="member-name-main ${grp ? 'has-group' : 'no-group'}">
+<span class="member-name-text">${esc(m.name)}</span>
+${roleHtml}
+<div class="member-name-icons">
+${hasPerm('edit_members') ? `<div class="edit-x" onclick="openEditModal(${m.id})" title="تعديل"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></div>` : ''}
+${hasPerm('remove_members') ? `<div class="delete-x" onclick="promptDeleteMember(${m.id})" title="حذف"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></div>` : ''}
+</div>
+</div>
+${grp ? `<div class="member-group-row">${groupBadge}</div>` : ''}
+</div>
+</div>
+<div class="member-points">${formatPoints(m.points)} نقطة</div>
+</div>
+`;
+});
+container.innerHTML = html;
+}
+function searchMembers() {
+const query = document.getElementById('memberSearch').value.trim().toLowerCase();
+const resultsDiv = document.getElementById('searchResults');
+if(!query) {
+resultsDiv.innerHTML = '';
+return;
+}
+const filtered = members.filter(m => m.name.toLowerCase().includes(query) || (m.rank && m.rank.toLowerCase().includes(query)));
+if(filtered.length === 0) {
+resultsDiv.innerHTML = '<div class="empty-state">لا توجد نتائج مطابقة</div>';
+return;
+}
+let html = '';
+filtered.forEach(m => {
+const grp = groups.find(g => Number(g.id) === Number(m.groupId));
+const groupBadge = grp ? ` (${esc(grp.name)})` : '';
+html += `
+<div class="search-result-card btn-press" onclick="openMemberDetail(${m.id}, 'control')">
+<div class="src-avatar">
+<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+</div>
+<div class="src-info">
+<div class="src-name">${esc(m.name)}${groupBadge}</div>
+<div class="src-rank">${esc(m.rank || 'عضو')}</div>
+</div>
+<div class="src-points">${m.points} نقطة</div>
+</div>
+`;
+});
+resultsDiv.innerHTML = html;
+}
+function addNewMember() {
+if(!hasPerm('add_members')) {
+showToast('ليس لديك صلاحية إضافة أعضاء');
+return;
+}
+const name = document.getElementById('newMemberName').value.trim();
+const rank = document.getElementById('newMemberRank').value.trim();
+const grpVal = document.getElementById('newMemberGroupValue')?.value || document.getElementById('newMemberGroup')?.value || '';
+if(!name) {
+showToast('يرجى كتابة اسم العضو');
+return;
+}
+const newMem = {
+id: Date.now(),
+name: name,
+rank: rank || 'عضو',
+points: 0,
+groupId: grpVal ? Number(grpVal) : null
+};
+members.push(newMem);
+logs.unshift({
+id: Date.now(),
+action: 'إضافة عضو جديد',
+memberName: name,
+details: rank || 'عضو',
+type: 'plus',
+memberId: newMem.id,
+time: new Date().toLocaleString('ar-SA')
+});
+saveAll();
+renderMembers();
+renderControlMembers();
+document.getElementById('newMemberName').value = '';
+document.getElementById('newMemberRank').value = '';
+buildGroupPicker('newMemberGroup', '');
+showToast('تمت إضافة العضو بنجاح', 'success');
+requestAnimationFrame(() => animateListIn(document.getElementById('membersList')));
+}
+function promptDeleteMember(id) {
+if(!hasPerm('remove_members')) {
+showToast('ليس لديك صلاحية حذف الأعضاء');
+return;
+}
+const m = members.find(x => x.id === id);
+if(!m) return;
+confirmCallback = function() {
+members = members.filter(x => x.id !== id);
+logs.unshift({
+id: Date.now(),
+action: 'حذف عضو',
+memberName: m.name,
+details: 'تم الحذف',
+type: 'minus',
+memberId: id,
+time: new Date().toLocaleString('ar-SA')
+});
+saveAll();
+renderMembers();
+renderControlMembers();
+if(currentGroupDetailId) renderGroupDetail(currentGroupDetailId);
+showToast('تم حذف العضو بنجاح', 'success');
+};
+document.getElementById('confirmTitle').textContent = 'حذف العضو';
+document.getElementById('confirmMsg').textContent = `هل أنت متأكد من حذف العضو "${m.name}"؟`;
+document.getElementById('confirmModal').className = 'modal confirm-modal';
+document.getElementById('confirmOverlay').classList.add('active');
+}
+function openEditModal(id) {
+if(!hasPerm('edit_members')) {
+showToast('ليس لديك صلاحية تعديل بيانات الأعضاء');
+return;
+}
+const m = members.find(x => x.id === id);
+if(!m) return;
+
+const modal = document.getElementById('modal');
+modal.className = 'modal purple';
+document.getElementById('modalTitle').textContent = 'تعديل بيانات العضو';
+document.getElementById('modalBody').innerHTML = `
+<label>اسم العضو</label>
+<input type="text" id="editName" value="${esc(m.name)}">
+<label>المنصب / المهنة</label>
+<input type="text" id="editRank" value="${esc(m.rank)}">
+<label>المجموعة</label>
+<div id="editGroup"></div>
+<button class="modal-submit btn-press" onclick="saveMemberEdit(${m.id})">حفظ التغييرات</button>
+`;
+buildGroupPicker('editGroup', m.groupId);
+document.getElementById('modalOverlay').classList.add('active');
+}
+function saveMemberEdit(id) {
+const m = members.find(x => x.id === id);
+if(!m) return;
+const name = document.getElementById('editName').value.trim();
+const rank = document.getElementById('editRank').value.trim();
+const grpVal = document.getElementById('editGroupValue')?.value || '';
+if(!name) {
+showToast('اسم العضو لا يمكن أن يكون فارغاً');
+return;
+}
+m.name = name;
+m.rank = rank;
+m.groupId = grpVal ? Number(grpVal) : null;
+logs.unshift({
+id: Date.now(),
+action: 'تعديل بيانات العضو',
+memberName: name,
+details: 'تم التعديل بواسطة الإدارة',
+type: 'note',
+memberId: id,
+time: new Date().toLocaleString('ar-SA')
+});
+saveAll();
+renderMembers();
+renderControlMembers();
+if(document.getElementById('memberDetailScreen').classList.contains('active') && currentMemberId === id) {
+openMemberDetail(id, detailOrigin);
+}
+if(document.getElementById('groupDetailScreen').classList.contains('active') && currentGroupDetailId) {
+renderGroupDetail(currentGroupDetailId);
+}
+closeModal();
+showToast('تم تحديث البيانات بنجاح', 'success');
+}
+// ===== CONTROL GROUPS =====
+function renderControlGroups() {
+const container = document.getElementById('controlGroupsList');
+if(!container) return;
+if(!groups || groups.length === 0) {
+container.innerHTML = '<div class="empty-state">لا توجد مجموعات</div>';
+return;
+}
+let html = '';
+groups.forEach(g => {
+const count = members.filter(m => Number(m.groupId) === Number(g.id)).length;
+html += `
+<div class="member-item">
+<div class="member-info">
+<div class="member-text">
+<div class="member-name">
+<span class="member-name-text">${esc(g.name)}</span>
+<div class="member-name-icons">
+<div class="edit-x" onclick="event.stopPropagation(); openEditGroupModal(${g.id})" title="تعديل"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></div>
+<div class="delete-x" onclick="promptDeleteGroup(${g.id})" title="حذف"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></div>
+</div>
+</div>
+<div class="member-rank">عدد الأعضاء: ${count}</div>
+</div>
+</div>
+<div class="group-points">${Number(g.points)||0} نقطة للمجموعة</div>
+<div class="member-actions">
+${hasPerm('add_points') ? `<button class="action-btn btn-plus btn-press" onclick="openGroupModal('groupPlus',${g.id})" title="إضافة نقاط للمجموعة"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>` : ''}
+${hasPerm('remove_points') ? `<button class="action-btn btn-minus btn-press" onclick="openGroupModal('groupMinus',${g.id})" title="خصم نقاط من المجموعة"><svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg></button>` : ''}
+<button class="action-btn btn-notes btn-press" onclick="openGroupModal('groupNote',${g.id})" title="ملاحظة للمجموعة"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg></button>
+</div>
+</div>
+`;
+});
+container.innerHTML = html;
+}
+function addNewGroup() {
+if(!hasPerm('add_groups')) { showToast('ليس لديك صلاحية إضافة مجموعات'); return; }
+const name = document.getElementById('newGroupName').value.trim();
+if(!name) {
+showToast('يرجى كتابة اسم المجموعة');
+return;
+}
+const newGrp = {
+id: Date.now(),
+name: name,
+points: 0
+};
+groups.push(newGrp);
+saveAll();
+renderControlGroups();
+renderMainGroups();
+populateGroupSelects();
+document.getElementById('newGroupName').value = '';
+showToast('تمت إضافة المجموعة بنجاح', 'success');
+}
+function openEditGroupModal(id) {
+const g = groups.find(x => x.id === id);
+if(!g) return;
+const modal = document.getElementById('modal');
+modal.className = 'modal purple';
+document.getElementById('modalTitle').textContent = 'تعديل اسم المجموعة';
+document.getElementById('modalBody').innerHTML = `
+<label>اسم المجموعة</label>
+<input type="text" id="editGroupName" value="${esc(g.name)}">
+<button class="modal-submit btn-press" onclick="saveGroupEdit(${g.id})">حفظ التغييرات</button>
+`;
+document.getElementById('modalOverlay').classList.add('active');
+}
+function saveGroupEdit(id) {
+const g = groups.find(x => x.id === id);
+if(!g) return;
+const name = document.getElementById('editGroupName').value.trim();
+if(!name) {
+showToast('اسم المجموعة لا يمكن أن يكون فارغاً');
+return;
+}
+g.name = name;
+saveAll();
+renderControlGroups();
+renderMainGroups();
+renderMembers();
+populateGroupSelects();
+closeModal();
+showToast('تم تحديث اسم المجموعة بنجاح', 'success');
+}
+function promptDeleteGroup(id) {
+if(!hasPerm('remove_groups')) { showToast('ليس لديك صلاحية حذف مجموعات'); return; }
+const g = groups.find(x => x.id === id);
+if(!g) return;
+confirmCallback = function() {
+groups = groups.filter(x => x.id !== id);
+// Remove group reference from members
+members.forEach(m => {
+if(Number(m.groupId) === Number(id)) m.groupId = null;
+});
+
+saveAll();
+renderControlGroups();
+renderMainGroups();
+renderMembers();
+populateGroupSelects();
+showToast('تم حذف المجموعة بنجاح', 'success');
+
+};
+document.getElementById('confirmTitle').textContent = 'حذف المجموعة';
+document.getElementById('confirmMsg').textContent = `هل أنت متأكد من حذف مجموعة "${g.name}"؟ (الأعضاء ينتمون لها سينتقلون لـ بدون مجموعة)`;
+document.getElementById('confirmModal').className = 'modal confirm-modal';
+document.getElementById('confirmOverlay').classList.add('active');
+}
+// ===== GROUP-WIDE POINTS / NOTES MODAL =====
+function openGroupModal(type, groupId) {
+currentModalType = type;
+currentGroupModalId = groupId;
+const g = groups.find(x => Number(x.id) === Number(groupId));
+if(!g) return;
+const groupMembersCount = members.filter(m => Number(m.groupId) === Number(g.id)).length;
+const modal = document.getElementById('modal');
+const title = document.getElementById('modalTitle');
+const body = document.getElementById('modalBody');
+if(type === 'groupPlus') {
+modal.className = 'modal green';
+title.textContent = `إضافة نقاط للمجموعة "${g.name}"`;
+body.innerHTML = `
+<label>عدد النقاط</label>
+<input type="number" id="modalAmount" placeholder="مثال: 10" min="1">
+<label>السبب / التفاصيل</label>
+<textarea id="modalReason" placeholder="اكتب سبب إضافة النقاط..."></textarea>
+<button class="modal-submit btn-press" onclick="submitGroupModal()">تأكيد إضافة النقاط للمجموعة</button>
+`;
+} else if(type === 'groupMinus') {
+modal.className = 'modal red';
+title.textContent = `خصم نقاط من المجموعة "${g.name}"`;
+body.innerHTML = `
+<label>عدد النقاط</label>
+<input type="number" id="modalAmount" placeholder="مثال: 10" min="1">
+<label>السبب / التفاصيل</label>
+<textarea id="modalReason" placeholder="اكتب سبب الخصم..."></textarea>
+<button class="modal-submit btn-press" onclick="submitGroupModal()">تأكيد خصم النقاط من المجموعة</button>
+`;
+} else if(type === 'groupNote') {
+modal.className = 'modal blue';
+title.textContent = `إضافة ملاحظة للمجموعة "${g.name}"`;
+body.innerHTML = `
+<label>نص الملاحظة</label>
+<textarea id="modalReason" placeholder="اكتب الملاحظة هنا..."></textarea>
+<button class="modal-submit btn-press" onclick="submitGroupModal()">حفظ الملاحظة</button>
+`;
+}
+document.getElementById('modalOverlay').classList.add('active');
+}
+function submitGroupModal() {
+const g = groups.find(x => Number(x.id) === Number(currentGroupModalId));
+if(!g) return;
+g.points = Number(g.points) || 0;
+const reason = document.getElementById('modalReason') ? document.getElementById('modalReason').value.trim() : '';
+if(currentModalType === 'groupPlus') {
+if(!hasPerm('add_points')) { showToast('ليس لديك صلاحية'); return; }
+const amount = parseInt(document.getElementById('modalAmount').value, 10);
+if(isNaN(amount) || amount <= 0) { showToast('يرجى ادخال عدد نقاط صحيح'); return; }
+g.points += amount;
+logs.unshift({
+id: Date.now() + Math.random(),
+action: `إضافة ${amount} نقاط للمجموعة`,
+memberName: g.name,
+details: reason || 'بدون سبب',
+type: 'plus',
+groupId: g.id,
+isGroupLog: true,
+time: new Date().toLocaleString('ar-SA')
+});
+showToast(`تمت إضافة ${amount} نقطة للمجموعة "${g.name}"`, 'success');
+} else if(currentModalType === 'groupMinus') {
+if(!hasPerm('remove_points')) { showToast('ليس لديك صلاحية'); return; }
+const amount = parseInt(document.getElementById('modalAmount').value, 10);
+if(isNaN(amount) || amount <= 0) { showToast('يرجى ادخال عدد نقاط صحيح'); return; }
+const actual = Math.min(g.points, amount);
+g.points -= actual;
+logs.unshift({
+id: Date.now() + Math.random(),
+action: `خصم ${actual} نقاط من المجموعة`,
+memberName: g.name,
+details: reason || 'بدون سبب',
+type: 'minus',
+groupId: g.id,
+isGroupLog: true,
+time: new Date().toLocaleString('ar-SA')
+});
+showToast(`تم خصم ${actual} نقطة من المجموعة "${g.name}"`, 'success');
+} else if(currentModalType === 'groupNote') {
+if(!reason) { showToast('يرجى كتابة الملاحظة'); return; }
+logs.unshift({
+id: Date.now() + Math.random(),
+action: 'ملاحظة للمجموعة',
+memberName: g.name,
+details: reason,
+type: 'note',
+groupId: g.id,
+isGroupLog: true,
+time: new Date().toLocaleString('ar-SA')
+});
+showToast(`تمت إضافة الملاحظة للمجموعة "${g.name}"`, 'success');
+}
+saveAll();
+renderMembers();
+renderControlMembers();
+renderMainGroups();
+renderControlGroups();
+if(document.getElementById('groupDetailScreen').classList.contains('active') && currentGroupDetailId) {
+renderGroupDetail(currentGroupDetailId);
+}
+closeModal();
+}
+// ===== CONTROL ASSISTANTS =====
+function togglePerm(element, perm) {
+const card = element.closest('.perm-card') || element;
+const checkbox = card.querySelector('input[type="checkbox"]');
+if(!checkbox) return;
+checkbox.checked = !checkbox.checked;
+card.classList.toggle('selected', checkbox.checked);
+}
+function renderControlAssistants() {
+const container = document.getElementById('controlAssistantsList');
+if(!container) return;
+if(!assistants || assistants.length === 0) {
+container.innerHTML = '<div class="empty-state">لا يوجد مساعدين</div>';
+return;
+}
+const permNames = {
+add_points: 'إضافة نقاط',
+remove_points: 'خصم نقاط',
+add_members: 'إضافة أعضاء',
+remove_members: 'إزالة أعضاء',
+edit_members: 'تعديل أعضاء',
+add_assistants: 'إضافة مساعدين',
+add_groups: 'إضافة مجموعات',
+remove_groups: 'حذف مجموعات',
+delete_logs: 'حذف السجل'
+};
+let html = '';
+assistants.forEach(a => {
+const isMainAdmin = a.username === 'Naif';
+const isCurrentUser = currentUser && String(a.username).toLowerCase() === String(currentUser.username).toLowerCase();
+const deleteBtn = (isMainAdmin || isCurrentUser) ? '' : `<div class="delete-x" onclick="promptDeleteAssistant(${a.id})" title="حذف"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></div>`;
+
+let permsTags = '';
+if(isMainAdmin) {
+  permsTags = '<span class="assistant-perm-tag">صلاحيات كاملة (مدير النظام)</span>';
+} else if(a.permissions && a.permissions.length > 0) {
+  a.permissions.forEach(p => {
+    permsTags += `<span class="assistant-perm-tag">${permNames[p] || p}</span>`;
+  });
+} else {
+  permsTags = '<span class="assistant-perm-tag">لا توجد صلاحيات</span>';
+}
+
+html += `
+  <div class="assistant-card">
+    <div class="assistant-card-header">
+      <div class="assistant-card-name">
+        <span class="assistant-card-name-text">${esc(a.username)}</span>
+        <div class="member-name-icons">
+          ${deleteBtn}
+        </div>
+      </div>
+    </div>
+    <div class="assistant-card-perms">${permsTags}</div>
+  </div>
+`;
+
+});
+container.innerHTML = html;
+}
+function addNewAssistant() {
+if(!hasPerm('add_assistants')) {
+showToast('ليس لديك صلاحية إضافة مساعدين');
+return;
+}
+const username = document.getElementById('newAssistantName').value.trim();
+const password = document.getElementById('newAssistantPass').value.trim();
+if(!username || !password) {
+showToast('يرجى ملء اسم المستخدم وكلمة المرور');
+return;
+}
+if(assistants.some(a => a.username.toLowerCase() === username.toLowerCase())) {
+showToast('اسم المستخدم هذا مستخدم بالفعل');
+return;
+}
+const perms = [];
+['add_points','remove_points','add_members','remove_members','edit_members','add_assistants','add_groups','remove_groups','delete_logs'].forEach(p => {
+const cb = document.getElementById(`perm_${p}`);
+if(cb && cb.checked) perms.push(p);
+});
+const newAst = {
+id: Date.now(),
+username: username,
+password: password,
+permissions: perms
+};
+assistants.push(newAst);
+saveAll();
+renderControlAssistants();
+document.getElementById('newAssistantName').value = '';
+document.getElementById('newAssistantPass').value = '';
+document.querySelectorAll('.perm-card').forEach(c => {
+c.classList.remove('selected');
+const cb = c.querySelector('input');
+if(cb) cb.checked = false;
+});
+showToast('تمت إضافة المساعد بنجاح', 'success');
+switchControlTab('assistants');
+}
+function promptDeleteAssistant(id) {
+const a = assistants.find(x => x.id === id);
+if(!a) return;
+if((currentUser && String(a.username).toLowerCase() === String(currentUser.username).toLowerCase()) || a.username === 'Naif' ) {
+showToast('لا يمكنك حذف حسابك بنفسك');
+return;
+}
+confirmCallback = function() {
+assistants = assistants.filter(x => x.id !== id);
+saveAll();
+renderControlAssistants();
+showToast('تم حذف المساعد بنجاح', 'success');
+};
+document.getElementById('confirmTitle').textContent = 'حذف المساعد';
+document.getElementById('confirmMsg').textContent = `هل أنت متأكد من حذف المساعد "${a.username}"؟`;
+document.getElementById('confirmModal').className = 'modal confirm-modal';
+document.getElementById('confirmOverlay').classList.add('active');
+}
+// ===== CONTROL LOGS =====
+function renderControlLogs() {
+const container = document.getElementById('controlLogList');
+if(!container) return;
+const clearBtn = document.getElementById('clearAllLogsBtn');
+if(clearBtn) clearBtn.style.display = hasPerm('delete_logs') ? '' : 'none';
+if(!logs || logs.length === 0) {
+container.innerHTML = '<div class="empty-state">لا يوجد سجل أحداث</div>';
+return;
+}
+let html = '';
+logs.forEach(l => {
+html += `
+<div class="log-item-with-delete">
+<div class="log-left">
+<button class="log-delete-btn btn-press ${hasPerm('delete_logs') ? 'can-delete-log' : ''}" onclick="deleteSingleLog(${l.id})" title="حذف"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+<div><span class="log-action ${l.type}">${esc(l.action)}</span> - ${esc(l.memberName)} (${esc(l.details)})</div>
+</div>
+<span class="log-time">${l.time}</span>
+</div>
+`;
+});
+container.innerHTML = html;
+}
+function deleteSingleLog(id) {
+if(!hasPerm('delete_logs')) { showToast('ليس لديك صلاحية حذف السجل'); return; }
+logs = logs.filter(l => String(l.id) !== String(id));
+saveAll();
+renderControlLogs();
+if(document.getElementById('memberDetailScreen').classList.contains('active') && currentMemberId) {
+filterDetailLog(currentDetailFilter);
+}
+showToast('تم حذف السجل بنجاح', 'success');
+}
+function clearAllLogsPrompt() {
+if(!hasPerm('delete_logs')) { showToast('ليس لديك صلاحية حذف السجل'); return; }
+confirmCallback = function() {
+logs = [];
+saveAll();
+renderControlLogs();
+if(document.getElementById('memberDetailScreen').classList.contains('active') && currentMemberId) {
+filterDetailLog(currentDetailFilter);
+}
+showToast('تم مسح جميع السجلات بنجاح', 'success');
+};
+document.getElementById('confirmTitle').textContent = 'مسح سجل الأحداث';
+document.getElementById('confirmMsg').textContent = 'هل أنت متأكد من مسح كافة سجلات الأحداث؟ لا يمكن التراجع عن هذا الإجراء.';
+document.getElementById('confirmModal').className = 'modal confirm-modal';
+document.getElementById('confirmOverlay').classList.add('active');
+}
+// ===== MEMBER DETAIL SCREEN =====
+function openMemberDetail(id, origin = 'dashboard') {
+currentMemberId = id;
+detailOrigin = origin;
+showScreen('detail');
+requestAnimationFrame(() => renderMemberDetail(id));
+}
+function renderMemberDetail(id) {
+const m = members.find(x => x.id === id);
+if(!m) return;
+const card = document.getElementById('memberProfileCard');
+const grp = groups.find(g => Number(g.id) === Number(m.groupId));
+const groupBadge = grp ? ` - ${esc(grp.name)}` : '';
+card.innerHTML = `
+<div class="member-profile-avatar">
+<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+</div>
+<div class="member-profile-info">
+<div class="member-profile-name">${esc(m.name)}</div>
+<div class="member-profile-rank">${esc(m.rank || 'عضو')}${groupBadge}</div>
+</div>
+<div class="member-profile-points">${formatPoints(m.points)} نقطة</div>
+`;
+const quickActions = document.getElementById('detailQuickActions');
+let qHtml = '';
+if(hasPerm('add_points')) {
+qHtml += `<button class="submit-btn btn-press" style="flex:1;background:linear-gradient(135deg,#16a34a,#22c55e);margin-top:0" onclick="openModal('plus',${m.id})">إضافة نقاط</button>`;
+}
+if(hasPerm('remove_points')) {
+qHtml += `<button class="submit-btn btn-press" style="flex:1;background:linear-gradient(135deg,#dc2626,#ef4444);margin-top:0" onclick="openModal('minus',${m.id})">خصم نقاط</button>`;
+}
+qHtml += `<button class="submit-btn btn-press" style="flex:1;background:linear-gradient(135deg,#2563eb,#3b82f6);margin-top:0" onclick="openModal('note',${m.id})">إضافة ملاحظة</button>`;
+quickActions.innerHTML = qHtml;
+const delWrap = document.getElementById('detailDeleteWrap');
+delWrap.style.display = hasPerm('remove_members') ? 'block' : 'none';
+filterDetailLog('all');
+}
+function goBackFromDetail() {
+if(detailOrigin === 'groupDetail' && currentGroupDetailId) {
+showScreen('groupDetail', 'back');
+requestAnimationFrame(() => renderGroupDetail(currentGroupDetailId));
+} else if(detailOrigin === 'control') {
+showScreen('control');
+} else {
+showScreen('dashboard', 'back');
+}
+}
+function deleteMemberFromDetail() {
+if(currentMemberId) promptDeleteMember(currentMemberId);
+}
+function filterDetailLog(type) {
+currentDetailFilter = type;
+// keep the member being viewed; do not rely on modal state
+const detailMemberId = Number(currentMemberId);
+document.getElementById('btnFilterPlus').classList.toggle('active', type === 'plus');
+document.getElementById('btnFilterMinus').classList.toggle('active', type === 'minus');
+document.getElementById('btnFilterNote').classList.toggle('active', type === 'note');
+const label = document.getElementById('detailLogFilterLabel');
+if(type === 'plus') label.textContent = 'نقاط الإضافة';
+else if(type === 'minus') label.textContent = 'نقاط الخصم';
+else if(type === 'note') label.textContent = 'الملاحظات';
+else label.textContent = 'الكل';
+const container = document.getElementById('detailLogList');
+if(!container || !Number.isFinite(detailMemberId)) return;
+const memberId = detailMemberId;
+let mLogs = logs.filter(l => {
+  if(l.isGroupLog) return false;
+  return Number(l.memberId) === memberId || (!l.memberId && String(l.memberName || '').trim() === String(members.find(m => Number(m.id) === memberId)?.name || '').trim());
+});
+if(type === 'plus') {
+  // Some old records use action text without a reliable type
+  mLogs = mLogs.filter(l => l.type === 'plus' || /^إضافة\s*\d+\s*نقطة/.test(String(l.action || '')));
+} else if(type === 'minus') {
+  mLogs = mLogs.filter(l => l.type === 'minus' || /^خصم\s*\d+\s*نقطة/.test(String(l.action || '')));
+} else if(type === 'note') {
+  mLogs = mLogs.filter(l => l.type === 'note' || String(l.action || '').trim() === 'ملاحظة');
+}
+mLogs.sort((a,b) => Number(b.id || 0) - Number(a.id || 0));
+if(mLogs.length === 0) {
+container.innerHTML = '<div class="empty-state">لا يوجد سجلات لهذه الفئة</div>';
+return;
+}
+let html = '';
+mLogs.forEach(l => {
+html += `
+<div class="log-item-with-delete">
+<div class="log-left">
+<button class="log-delete-btn btn-press ${hasPerm('delete_logs') ? 'can-delete-log' : ''}" onclick="deleteSingleLog(${l.id})" title="حذف"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+<div><span class="log-action ${l.type}">${esc(l.action)}</span> (${esc(l.details)})</div>
+</div>
+<span class="log-time">${l.time}</span>
+</div>
+`;
+});
+container.innerHTML = html;
+}
+// ===== MODAL (PLUS, MINUS, NOTE) =====
+function openModal(type, memberId) {
+currentModalType = type;
+currentMemberId = memberId;
+const m = members.find(x => x.id === memberId);
+if(!m) return;
+const modal = document.getElementById('modal');
+const title = document.getElementById('modalTitle');
+const body = document.getElementById('modalBody');
+if(type === 'plus') {
+modal.className = 'modal green';
+title.textContent = `إضافة نقاط لـ ${m.name}`;
+body.innerHTML = `
+<label>عدد النقاط</label>
+<input type="number" id="modalAmount" placeholder="مثال: 10" min="1">
+<label>السبب / التفاصيل</label>
+<textarea id="modalReason" placeholder="اكتب سبب إضافة النقاط..."></textarea>
+<button class="modal-submit btn-press" onclick="submitModal()">تأكيد الإضافة</button>
+`;
+} else if(type === 'minus') {
+modal.className = 'modal red';
+title.textContent = `خصم نقاط من ${m.name}`;
+body.innerHTML = `
+<label>عدد النقاط</label>
+<input type="number" id="modalAmount" placeholder="مثال: 10" min="1">
+<label>السبب / التفاصيل</label>
+<textarea id="modalReason" placeholder="اكتب سبب خصم النقاط..."></textarea>
+<button class="modal-submit btn-press" onclick="submitModal()">تأكيد الخصم</button>
+`;
+} else if(type === 'note') {
+modal.className = 'modal blue';
+title.textContent = `إضافة ملاحظة لـ ${m.name}`;
+body.innerHTML = `
+<label>نص الملاحظة</label>
+<textarea id="modalReason" placeholder="اكتب الملاحظة هنا..."></textarea>
+<button class="modal-submit btn-press" onclick="submitModal()">حفظ الملاحظة</button>
+`;
+}
+document.getElementById('modalOverlay').classList.add('active');
+}
+function closeModal() {
+document.getElementById('modalOverlay').classList.remove('active');
+}
+function submitModal() {
+const m = members.find(x => Number(x.id) === Number(currentMemberId));
+if(!m) return;
+m.points = formatPoints(m.points);
+const reason = document.getElementById('modalReason') ? document.getElementById('modalReason').value.trim() : '';
+if(currentModalType === 'plus') {
+if(!hasPerm('add_points')) { showToast('ليس لديك صلاحية'); return; }
+const amount = parseInt(document.getElementById('modalAmount').value, 10);
+if(isNaN(amount) || amount <= 0) { showToast('يرجى ادخال عدد نقاط صحيح'); return; }
+
+m.points = formatPoints(m.points) + amount;
+logs.unshift({
+  id: Date.now(),
+  action: `إضافة ${amount} نقاط`,
+  memberName: m.name,
+  details: reason || 'بدون سبب',
+  type: 'plus',
+  memberId: m.id,
+  time: new Date().toLocaleString('ar-SA')
+});
+showToast(`تمت إضافة ${amount} نقاط لـ ${m.name}`, 'success');
+
+} else if(currentModalType === 'minus') {
+if(!hasPerm('remove_points')) { showToast('ليس لديك صلاحية'); return; }
+const amount = parseInt(document.getElementById('modalAmount').value, 10);
+if(isNaN(amount) || amount <= 0) { showToast('يرجى ادخال عدد نقاط صحيح'); return; }
+
+m.points = Math.max(0, formatPoints(m.points) - amount);
+logs.unshift({
+  id: Date.now(),
+  action: `خصم ${amount} نقاط`,
+  memberName: m.name,
+  details: reason || 'بدون سبب',
+  type: 'minus',
+  memberId: m.id,
+  time: new Date().toLocaleString('ar-SA')
+});
+showToast(`تم خصم ${amount} نقاط من ${m.name}`, 'success');
+
+} else if(currentModalType === 'note') {
+if(!reason) { showToast('يرجى كتابة الملاحظة'); return; }
+
+logs.unshift({
+  id: Date.now(),
+  action: 'ملاحظة',
+  memberName: m.name,
+  details: reason,
+  type: 'note',
+  memberId: m.id,
+  time: new Date().toLocaleString('ar-SA')
+});
+showToast('تمت إضافة الملاحظة بنجاح', 'success');
+
+}
+saveAll();
+renderMembers();
+renderControlMembers();
+if(document.getElementById('memberDetailScreen').classList.contains('active') && currentMemberId === m.id) {
+openMemberDetail(m.id, detailOrigin);
+}
+if(document.getElementById('groupDetailScreen').classList.contains('active') && currentGroupDetailId) {
+renderGroupDetail(currentGroupDetailId);
+}
+closeModal();
+}
+// ===== CONFIRM MODAL =====
+function closeConfirm() {
+document.getElementById('confirmOverlay').classList.remove('active');
+confirmCallback = null;
+}
+function executeDelete() {
+if(confirmCallback) confirmCallback();
+closeConfirm();
+}
+function animateListIn(container) {
+if(!container) return;
+const items = container.querySelectorAll('.member-item,.assistant-card,.list-item');
+items.forEach((el,i) => {
+el.classList.remove('item-enter');
+el.style.animationDelay = `${Math.min(i,12)*35}ms`;
+void el.offsetWidth;
+el.classList.add('item-enter');
+});
+}
+// ===== INIT =====
+window.addEventListener('DOMContentLoaded', () => {
+if(rememberUser) {
+currentUser = rememberUser;
+}
+setupToastSwipe();
+setupFirebase();
+initFirebase();
+});
+</script>
+</body>
+</html>
