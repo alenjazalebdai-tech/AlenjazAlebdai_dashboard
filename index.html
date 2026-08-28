@@ -570,7 +570,6 @@ touch-action:pan-y;
         text-overflow: ellipsis !important;
     }
 }
-</style>
 
 <style id="group-detail-history-fix">
 .group-detail-actions{width:100%;max-width:700px;}
@@ -580,6 +579,7 @@ touch-action:pan-y;
   .group-detail-log-section{max-height:none!important;overflow:visible!important;margin-bottom:40px;}
   .group-detail-log-list{max-height:none!important;overflow:visible!important;padding-bottom:24px;}
 }
+</style>
 </style>
 <style id="firebase-sync-status">
 .sync-status{display:flex;align-items:center;gap:8px;padding:7px 11px;border-radius:999px;font-size:.72rem;font-weight:600;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#d4b896;white-space:nowrap}
@@ -596,7 +596,7 @@ touch-action:pan-y;
 </head>
 <body>
 <script>
-const APP_VERSION = "v2.6";
+const APP_VERSION = "v2.7";
 (function(){
     const key = "app_ver_" + location.pathname;
     const stored = localStorage.getItem(key);
@@ -1021,7 +1021,16 @@ members = (members || []).map(m => ({...m, points: Number.isFinite(Number(m.poin
 groups = (groups || []).map(g => ({...g, points: Number.isFinite(Number(g.points)) ? Number(g.points) : 0}));
 assistants = (assistants || [])
 .filter(a => String(a.username || '').trim().toLowerCase() !== 'admin')
-.map(a => ({...a, permissions: Array.isArray(a.permissions) ? [...a.permissions] : []}));
+.map(a => {
+  const username = String(a.username || '').trim();
+  const isNaif = username.toLowerCase() === 'naif';
+  return {
+    ...a,
+    username: isNaif ? 'Naif' : username,
+    password: isNaif ? '0Naif1' : a.password,
+    permissions: isNaif ? FULL_ASSISTANT_PERMISSIONS.slice() : (Array.isArray(a.permissions) ? [...a.permissions] : [])
+  };
+});
 logs = Array.isArray(logs) ? logs : [];
 // Legacy accounts had no knowledge of the newly-added permissions. Keep
 // existing full-access assistants working after the upgrade.
@@ -1104,10 +1113,11 @@ toastDragY = 0;
 }
 function hasPerm(perm) {
 if(!currentUser) return false;
-if(currentUser.username === 'Naif') return true;
-return currentUser.permissions && currentUser.permissions.includes(perm);
+if(String(currentUser.username || '').trim().toLowerCase() === 'naif') return true;
+return Array.isArray(currentUser.permissions) && currentUser.permissions.includes(perm);
 }
 // ===== FIREBASE SYNC / OFFLINE OUTBOX =====
+const FULL_ASSISTANT_PERMISSIONS = ['add_points','remove_points','add_members','remove_members','edit_members','add_assistants','add_groups','remove_groups','delete_logs'];
 const FIREBASE_PENDING_KEY = 'membersAppFirebasePendingV2';
 
 function deepClone(value) {
@@ -1146,7 +1156,16 @@ function normalizeRemoteState(data) {
 
   state.assistants = state.assistants
     .filter(a => String(a.username || '').trim().toLowerCase() !== 'admin')
-    .map(a => ({...a, permissions: Array.isArray(a.permissions) ? [...a.permissions] : []}));
+    .map(a => {
+      const username = String(a.username || '').trim();
+      const isNaif = username.toLowerCase() === 'naif';
+      return {
+        ...a,
+        username: isNaif ? 'Naif' : username,
+        password: isNaif ? '0Naif1' : a.password,
+        permissions: isNaif ? FULL_ASSISTANT_PERMISSIONS.slice() : (Array.isArray(a.permissions) ? [...a.permissions] : [])
+      };
+    });
 
   return state;
 }
