@@ -604,7 +604,7 @@ touch-action:pan-y;
 </head>
 <body>
 <script>
-const APP_VERSION = "v3.4";
+const APP_VERSION = "v3.5";
 (function(){
     const key = "app_ver_" + location.pathname;
     const stored = localStorage.getItem(key);
@@ -2481,7 +2481,7 @@ const isMainAdmin = a.username === 'Naif';
 const isCurrentUser = currentUser && String(a.username).toLowerCase() === String(currentUser.username).toLowerCase();
 const canDeleteAssistant = hasPerm('delete_assistants') && !isMainAdmin && !isCurrentUser;
 const canEditAssistant = hasPerm('add_assistants') && !isMainAdmin;
-const assistantActions = `${canEditAssistant ? `<button class="assistant-edit-btn btn-press" onclick="openAssistantPermissionsModal(${JSON.stringify(String(a.id))})" title="تعديل الصلاحيات"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75-10.06 10.06zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0-1.41 0-1.02.39-1.41l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>` : ''}${canDeleteAssistant ? `<div class="delete-x" onclick="promptDeleteAssistant(${JSON.stringify(String(a.id))})" title="حذف"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></div>` : ''}`;
+const assistantActions = `${canEditAssistant ? `<button class="assistant-edit-btn btn-press" onclick="openAssistantPermissionsModal('${String(a.id)}')" title="تعديل الصلاحيات"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75-10.06 10.06zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0-1.41 0-1.02.39-1.41l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>` : ''}${canDeleteAssistant ? `<div class="delete-x" onclick="promptDeleteAssistant('${String(a.id)}')" title="حذف"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></div>` : ''}`;
 
 let permsTags = '';
 if(isMainAdmin) {
@@ -2595,7 +2595,7 @@ ${ASSISTANT_PERMISSION_KEYS.map(p => `
 <label for="assistant_edit_perm_${p}" onclick="event.stopPropagation()">${names[p]}</label>
 </div>`).join('')}
 </div>
-<button class="modal-submit btn-press" onclick="saveAssistantPermissions(${a.id})">حفظ الصلاحيات</button>
+<button class="modal-submit btn-press" onclick="saveAssistantPermissions('${String(a.id)}')">حفظ الصلاحيات</button>
 `;
 document.getElementById('assistantPermOverlay').classList.add('active');
 }
@@ -2640,7 +2640,7 @@ if(!hasPerm('delete_assistants')) {
 showToast('ليس لديك صلاحية حذف المساعدين');
 return;
 }
-const a = assistants.find(x => x.id === id);
+const a = assistants.find(x => String(x.id) === String(id));
 if(!a) return;
 if((currentUser && String(a.username).toLowerCase() === String(currentUser.username).toLowerCase()) || String(a.username).toLowerCase() === 'naif' ) {
 showToast('لا يمكنك حذف حسابك بنفسك');
