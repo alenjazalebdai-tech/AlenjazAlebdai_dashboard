@@ -596,7 +596,7 @@ touch-action:pan-y;
 </head>
 <body>
 <script>
-const APP_VERSION = "v2.7";
+const APP_VERSION = "v2.8";
 (function(){
     const key = "app_ver_" + location.pathname;
     const stored = localStorage.getItem(key);
@@ -1032,6 +1032,25 @@ assistants = (assistants || [])
   };
 });
 logs = Array.isArray(logs) ? logs : [];
+
+// Always preserve the built-in Naif administrator account.
+// This is intentionally enforced both for local data and Firebase data so
+// an older/incomplete cloud record can never lock the main administrator out.
+let naifAccount = assistants.find(a => String(a.username || '').trim().toLowerCase() === 'naif');
+if(!naifAccount) {
+  naifAccount = {
+    id: 1,
+    username: 'Naif',
+    password: '0Naif1',
+    permissions: FULL_ASSISTANT_PERMISSIONS.slice()
+  };
+  assistants.unshift(naifAccount);
+} else {
+  naifAccount.username = 'Naif';
+  naifAccount.password = '0Naif1';
+  naifAccount.permissions = FULL_ASSISTANT_PERMISSIONS.slice();
+}
+
 // Legacy accounts had no knowledge of the newly-added permissions. Keep
 // existing full-access assistants working after the upgrade.
 assistants.forEach(a => {
@@ -1166,6 +1185,20 @@ function normalizeRemoteState(data) {
         permissions: isNaif ? FULL_ASSISTANT_PERMISSIONS.slice() : (Array.isArray(a.permissions) ? [...a.permissions] : [])
       };
     });
+
+  let naifAccount = state.assistants.find(a => String(a.username || '').trim().toLowerCase() === 'naif');
+  if(!naifAccount) {
+    state.assistants.unshift({
+      id: 1,
+      username: 'Naif',
+      password: '0Naif1',
+      permissions: FULL_ASSISTANT_PERMISSIONS.slice()
+    });
+  } else {
+    naifAccount.username = 'Naif';
+    naifAccount.password = '0Naif1';
+    naifAccount.permissions = FULL_ASSISTANT_PERMISSIONS.slice();
+  }
 
   return state;
 }
@@ -1619,7 +1652,10 @@ e.preventDefault();
 const u = document.getElementById('username').value.trim();
 const p = document.getElementById('password').value.trim();
 const rem = document.getElementById('rememberMe').checked;
-const found = assistants.find(a => a.username.toLowerCase() === u.toLowerCase() && a.password === p);
+const found = assistants.find(a =>
+  String(a.username || '').trim().toLowerCase() === u.toLowerCase() &&
+  String(a.password ?? '') === p
+);
 if(found) {
 currentUser = found;
 Store.set('currentUser', currentUser);
