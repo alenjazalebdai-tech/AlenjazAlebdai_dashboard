@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>لوحة متابعة الأعضاء</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js" defer></script>
@@ -474,8 +477,149 @@ touch-action:pan-y;
   flex:0 1 auto;
 }
 </style>
+<style id="opera-cache-fix">
+/* Opera / Cross-browser consistency fixes */
+.login-card,.members-list,.modal,.control-card,.member-profile-card,.detail-log-section,.log-section,.search-result-card,.perm-card,.assistant-card{
+    -webkit-backdrop-filter:blur(30px);backdrop-filter:blur(30px);transform:translateZ(0);-webkit-transform:translateZ(0);
+}
+@supports not (backdrop-filter:blur(10px)){
+    .login-card,.members-list,.modal,.control-card{background:rgba(26,18,8,.98)!important;}
+}
+.member-item>*{min-width:0;overflow-wrap:break-word;}
+.member-name-text,.member-rank{min-width:0;overflow:hidden;text-overflow:ellipsis;}
+@media all and (-webkit-min-device-pixel-ratio:0) and (min-resolution:.001dpcm){
+    .screen,.member-item,.search-result-card,.list-item{transform:translateZ(0);backface-visibility:hidden;}
+}
+</style>
+<style id="final-mobile-text-fix">
+/* ===== FINAL FIX: Prevent vertical letter-by-letter text ===== */
+@media(max-width: 700px){
+    /* Members list items */
+    #membersList .member-item,
+    #groupsMainList .list-item,
+    #controlMembersList .member-item {
+        flex-wrap: nowrap !important;
+    }
+
+    #membersList .member-info,
+    #groupsMainList .list-item-info,
+    #controlMembersList .member-info {
+        min-width: 80px !important;
+        flex: 1 1 auto !important;
+        overflow: hidden !important;
+    }
+
+    #membersList .member-name-main,
+    #groupsMainList .list-item-name,
+    #controlMembersList .member-name-main {
+        flex-wrap: nowrap !important;
+        gap: 6px !important;
+    }
+
+    #membersList .member-name-text,
+    #groupsMainList .list-item-name-text,
+    #controlMembersList .member-name-text {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        word-break: normal !important;
+        word-wrap: normal !important;
+        overflow-wrap: normal !important;
+        min-width: 40px !important;
+        flex: 1 1 auto !important;
+        display: inline-block !important;
+    }
+
+    #membersList .member-role-inline,
+    #controlMembersList .member-role-inline {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        min-width: 30px !important;
+        flex: 0 1 auto !important;
+    }
+
+    #membersList .member-rank,
+    #groupsMainList .list-item-sub,
+    #controlMembersList .member-rank {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    /* Ensure action buttons don't force text to shrink */
+    #membersList .member-actions,
+    #groupsMainList .member-actions {
+        flex-shrink: 0 !important;
+    }
+
+    /* Group list name fix */
+    #groupsMainList .list-item-name-text {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        min-width: 40px !important;
+        flex: 1 1 auto !important;
+        display: inline-block !important;
+    }
+
+    /* Search results */
+    #mainSearchResults .search-result-card .src-name {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+}
+</style>
+
+<style id="group-detail-history-fix">
+.group-detail-actions{width:100%;max-width:700px;}
+.group-detail-log-section{width:100%;max-width:700px;}
+@media(max-width:700px){
+  .group-detail-actions{grid-template-columns:1fr;}
+  .group-detail-log-section{max-height:none!important;overflow:visible!important;margin-bottom:40px;}
+  .group-detail-log-list{max-height:none!important;overflow:visible!important;padding-bottom:24px;}
+}
+</style>
+<style id="firebase-sync-status">
+.sync-status{display:flex;align-items:center;gap:8px;padding:7px 11px;border-radius:999px;font-size:.72rem;font-weight:600;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#d4b896;white-space:nowrap}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#f59e0b;box-shadow:0 0 10px rgba(245,158,11,.45);flex-shrink:0}
+.sync-status.online{border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.08);color:#86efac}
+.sync-status.online .sync-dot{background:#22c55e;box-shadow:0 0 10px rgba(34,197,94,.55)}
+.sync-status.syncing{border-color:rgba(59,130,246,.3);background:rgba(59,130,246,.08);color:#93c5fd}
+.sync-status.syncing .sync-dot{background:#3b82f6;box-shadow:0 0 10px rgba(59,130,246,.55);animation:syncPulse 1s ease-in-out infinite}
+.sync-status.offline{border-color:rgba(245,158,11,.28);background:rgba(245,158,11,.07);color:#fcd34d}
+@keyframes syncPulse{50%{transform:scale(.65);opacity:.55}}
+@media(max-width:700px){.sync-status{font-size:.68rem;padding:6px 9px}}
+</style>
+
 </head>
 <body>
+<script>
+const APP_VERSION = "v2.6";
+(function(){
+    const key = "app_ver_" + location.pathname;
+    const stored = localStorage.getItem(key);
+    if(stored !== APP_VERSION){
+        localStorage.setItem(key, APP_VERSION);
+        if(window.opr || navigator.userAgent.indexOf('OPR') > -1 || navigator.userAgent.indexOf('Opera') > -1){
+            location.reload(true);
+        }
+    }
+    // Kill back-forward cache on ALL browsers
+    window.onpageshow = function(e){
+        if(e.persisted){
+            location.reload(true);
+        }
+    };
+    // Also clear any service workers
+    if('serviceWorker' in navigator){
+        navigator.serviceWorker.getRegistrations().then(regs => {
+            regs.forEach(r => r.unregister());
+        });
+    }
+})();
+</script>
 <div class="bg-orb bg-orb-1"></div>
 <div class="bg-orb bg-orb-2"></div>
 <div class="bg-orb bg-orb-3"></div>
@@ -533,6 +677,9 @@ touch-action:pan-y;
 </div>
 <div class="dashboard-screen screen" id="dashboardScreen">
 <div class="dashboard-header">
+<div id="syncStatus" class="sync-status offline" aria-live="polite">
+<span class="sync-dot"></span><span id="syncStatusText">جاري الاتصال...</span>
+</div>
 <h2 id="mainListTitle">قائمة الأعضاء</h2>
 <div class="user-info">
 <span id="currentUserName">المستخدم</span>
@@ -599,6 +746,25 @@ touch-action:pan-y;
 </div>
 </div>
 <div style="width:100%;max-width:700px;display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px" id="groupQuickActions"></div>
+<div class="detail-actions group-detail-actions">
+<button class="detail-action-btn points-btn btn-press" id="groupBtnFilterPlus" onclick="filterGroupDetailLog('plus')">
+<svg viewBox="0 0 24 24" fill="#22c55e"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+<span>سجل النقاط</span>
+</button>
+<button class="detail-action-btn minus-btn btn-press" id="groupBtnFilterMinus" onclick="filterGroupDetailLog('minus')">
+<svg viewBox="0 0 24 24" fill="#ef4444"><path d="M19 13H5v-2h14v2z"/></svg>
+<span>سجل الخصم</span>
+</button>
+<button class="detail-action-btn notes-btn btn-press" id="groupBtnFilterNote" onclick="filterGroupDetailLog('note')">
+<svg viewBox="0 0 24 24" fill="#3b82f6"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm0-5V3.5L18.5 9H13z"/></svg>
+<span>الملاحظات</span>
+</button>
+</div>
+<div class="members-list" id="groupDetailMembersList"></div>
+<div class="detail-log-section group-detail-log-section">
+<div class="detail-log-header"><h3><svg viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 1-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>سجل الاحداث</h3><span style="color:rgba(212,184,150,.5);font-size:.8rem" id="groupDetailLogFilterLabel">الكل</span></div>
+<div class="detail-log-list group-detail-log-list" id="groupDetailLogList"></div>
+</div>
 <div class="members-list" id="groupDetailMembersList"></div>
 </div>
 <div class="control-screen screen" id="controlScreen">
@@ -836,8 +1002,14 @@ let currentMemberId = null;
 let currentGroupModalId = null;
 let currentModalType = null;
 let currentDetailFilter = 'all';
+let currentGroupDetailFilter = 'all';
 let firebaseConnected = false;
 let dataInitialized = false;
+let firebaseWriteInFlight = false;
+let firebaseSyncRequested = false;
+let firebaseBaseState = null;
+let firebaseClientId = sessionStorage.getItem('membersAppClientId') || ('c_' + Math.random().toString(36).slice(2) + Date.now().toString(36));
+sessionStorage.setItem('membersAppClientId', firebaseClientId);
 let confirmCallback = null;
 let selectedPermissions = [];
 let activeMainTab = 'members';
@@ -935,114 +1107,402 @@ if(!currentUser) return false;
 if(currentUser.username === 'Naif') return true;
 return currentUser.permissions && currentUser.permissions.includes(perm);
 }
-// ===== SAVE TO FIREBASE =====
-function saveAll() {
-normalizeState();
-window._lastLocalUpdate = Date.now();
-Store.set('members', members);
-Store.set('groups', groups);
-Store.set('assistants', assistants);
-Store.set('logs', logs);
-if(firebaseAvailable && firebaseConnected && dbRef) {
-dbRef.set({
-members: members,
-groups: groups,
-assistants: assistants,
-logs: logs,
-lastUpdate: window._lastLocalUpdate
-}).catch(err => console.error('Firebase save error:', err));
-}
-}
-// ===== LOAD FROM FIREBASE =====
-function initFirebase() {
-function loadLocalOnly() {
-members = Store.get('members', defaultMembers);
-groups = Store.get('groups', defaultGroups);
-groups = (groups || []).map(g => ({...g, points: Number(g.points) || 0}));
-members = (members || []).map(m => ({...m, points: formatPoints(m.points)}));
-assistants = Store.get('assistants', defaultAssistants);
-logs = Store.get('logs', defaultLogs);
-normalizeState();
-dataInitialized = true;
+// ===== FIREBASE SYNC / OFFLINE OUTBOX =====
+const FIREBASE_PENDING_KEY = 'membersAppFirebasePendingV2';
 
-if(currentUser) {
-  document.getElementById('currentUserName').textContent = currentUser.username;
-  showScreen('dashboard');
-  renderMembers();
-  renderMainGroups();
-  populateGroupSelects();
+function deepClone(value) {
+  return value == null ? value : JSON.parse(JSON.stringify(value));
 }
 
-}
-if(!firebaseAvailable || !dbRef) {
-loadLocalOnly();
-return;
-}
-dbRef.once('value').then(snapshot => {
-const data = snapshot.val();
-if(data && data.members && data.members.length > 0) {
-members = data.members || defaultMembers;
-groups = (data.groups || defaultGroups).map(g => ({...g, points: Number(g.points) || 0}));
-members = (data.members || defaultMembers).map(m => ({...m, points: formatPoints(m.points)}));
-assistants = data.assistants || defaultAssistants;
-logs = data.logs || defaultLogs;
-normalizeState();
-} else {
-members = Store.get('members', defaultMembers);
-groups = Store.get('groups', defaultGroups);
-assistants = Store.get('assistants', defaultAssistants);
-logs = Store.get('logs', defaultLogs);
-normalizeState();
-saveAll();
+function stateFromGlobals() {
+  normalizeState();
+  return {
+    members: deepClone(members || []),
+    groups: deepClone(groups || []),
+    assistants: deepClone(assistants || []),
+    logs: deepClone(logs || [])
+  };
 }
 
-firebaseConnected = true;
-dataInitialized = true;
+function normalizeRemoteState(data) {
+  data = data || {};
+  const state = {
+    members: Array.isArray(data.members) ? data.members : [],
+    groups: Array.isArray(data.groups) ? data.groups : [],
+    assistants: Array.isArray(data.assistants) ? data.assistants : [],
+    logs: Array.isArray(data.logs) ? data.logs : []
+  };
 
-dbRef.on('value', snapshot => {
-  const newData = snapshot.val();
-  if(!newData) return;
-  if(newData.lastUpdate && newData.lastUpdate > (window._lastLocalUpdate || 0) + 1000) {
-    members = newData.members || members;
-    groups = newData.groups || groups;
-    assistants = newData.assistants || assistants;
-    logs = newData.logs || logs;
-    normalizeState();
+  state.members = state.members.map(m => ({
+    ...m,
+    points: formatPoints(m.points),
+    groupId: m.groupId === '' || m.groupId == null ? null : Number(m.groupId)
+  }));
 
-    if(document.getElementById('dashboardScreen').classList.contains('active')) {
-      renderMembers();
-      renderMainGroups();
+  state.groups = state.groups.map(g => ({
+    ...g,
+    points: formatPoints(g.points)
+  }));
+
+  state.assistants = state.assistants
+    .filter(a => String(a.username || '').trim().toLowerCase() !== 'admin')
+    .map(a => ({...a, permissions: Array.isArray(a.permissions) ? [...a.permissions] : []}));
+
+  return state;
+}
+
+function objectsEqual(a, b) {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function mapById(items) {
+  const map = {};
+  (items || []).forEach(item => {
+    if(item && item.id != null) map[String(item.id)] = item;
+  });
+  return map;
+}
+
+// Conflict-safe three-way merge. Score-only edits are merged as deltas so
+// concurrent +/− operations from different devices are not overwritten.
+function mergeCollection(localItems, baseItems, remoteItems, options = {}) {
+  const base = mapById(baseItems);
+  const local = mapById(localItems);
+  const remote = mapById(remoteItems);
+  const out = {...remote};
+
+  Object.keys(local).forEach(id => {
+    const l = local[id];
+    const b = base[id];
+    const r = remote[id];
+
+    if(!b) {
+      if(!r) out[id] = deepClone(l);
+      return;
     }
-    if(document.getElementById('controlScreen').classList.contains('active')) {
-      renderControlMembers();
-      renderControlGroups();
-      renderControlAssistants();
-      renderControlLogs();
-      populateGroupSelects();
+
+    if(objectsEqual(l, b)) return;
+
+    if(!r) {
+      // Remote deletion wins over a stale local copy.
+      return;
     }
-    if(document.getElementById('memberDetailScreen').classList.contains('active') && currentMemberId) {
-      filterDetailLog(currentDetailFilter);
+
+    if(options.pointDelta && Number(l.points) !== Number(b.points)) {
+      const otherKeysChanged = Object.keys(l).some(k =>
+        k !== 'points' && !objectsEqual(l[k], b[k])
+      );
+      if(!otherKeysChanged) {
+        const delta = Number(l.points) - Number(b.points);
+        out[id] = {
+          ...deepClone(r),
+          points: Math.max(0, (Number(r.points) || 0) + delta)
+        };
+        return;
+      }
     }
-    if(document.getElementById('groupDetailScreen').classList.contains('active') && currentGroupDetailId) {
-      renderGroupDetail(currentGroupDetailId);
+
+    const merged = deepClone(r);
+    const keys = new Set([...Object.keys(b || {}), ...Object.keys(l || {})]);
+    keys.forEach(k => {
+      if(!objectsEqual(l[k], b[k])) merged[k] = deepClone(l[k]);
+    });
+    out[id] = merged;
+  });
+
+  // Safe local deletions: remove only records that have not been changed
+  // remotely since this device's base snapshot.
+  Object.keys(base).forEach(id => {
+    if(local[id] !== undefined) return;
+    if(remote[id] !== undefined && objectsEqual(remote[id], base[id])) {
+      delete out[id];
+    }
+  });
+
+  return Object.values(out);
+}
+
+function mergeState(localState, baseState, remoteState) {
+  const local = normalizeRemoteState(localState);
+  const base = normalizeRemoteState(baseState);
+  const remote = normalizeRemoteState(remoteState);
+
+  return {
+    members: mergeCollection(local.members, base.members, remote.members, {pointDelta:true}),
+    groups: mergeCollection(local.groups, base.groups, remote.groups, {pointDelta:true}),
+    assistants: mergeCollection(local.assistants, base.assistants),
+    logs: mergeCollection(local.logs, base.logs)
+  };
+}
+
+function savePendingState(state, baseState) {
+  const pending = {
+    version: Date.now() + Math.random(),
+    state: deepClone(state),
+    base: deepClone(baseState),
+    createdAt: Date.now()
+  };
+  try { localStorage.setItem(FIREBASE_PENDING_KEY, JSON.stringify(pending)); } catch {}
+  return pending;
+}
+
+function readPendingState() {
+  try {
+    const raw = localStorage.getItem(FIREBASE_PENDING_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function clearPendingState(expectedVersion = null) {
+  const current = readPendingState();
+  if(expectedVersion != null && current && Number(current.version) !== Number(expectedVersion)) return;
+  try { localStorage.removeItem(FIREBASE_PENDING_KEY); } catch {}
+}
+
+function setSyncStatus(mode, text) {
+  const el = document.getElementById('syncStatus');
+  const label = document.getElementById('syncStatusText');
+  if(!el || !label) return;
+  el.classList.remove('online','offline','syncing');
+  el.classList.add(mode);
+  label.textContent = text;
+}
+
+function applyStateToUI(state) {
+  if(!state) return;
+  members = deepClone(state.members || []);
+  groups = deepClone(state.groups || []);
+  assistants = deepClone(state.assistants || []);
+  logs = deepClone(state.logs || []);
+  normalizeState();
+
+  if(document.getElementById('dashboardScreen')?.classList.contains('active')) {
+    renderMembers();
+    renderMainGroups();
+  }
+  if(document.getElementById('controlScreen')?.classList.contains('active')) {
+    renderControlMembers();
+    renderControlGroups();
+    renderControlAssistants();
+    renderControlLogs();
+    populateGroupSelects();
+  }
+  if(document.getElementById('memberDetailScreen')?.classList.contains('active') && currentMemberId) {
+    renderMemberDetail(currentMemberId);
+    filterDetailLog(currentDetailFilter);
+  }
+  if(document.getElementById('groupDetailScreen')?.classList.contains('active') && currentGroupDetailId) {
+    renderGroupDetail(currentGroupDetailId);
+    filterGroupDetailLog(currentGroupDetailFilter);
+  }
+}
+
+async function syncPendingNow() {
+  if(!firebaseAvailable || !dbRef || !firebaseConnected || !dataInitialized) return;
+
+  if(firebaseWriteInFlight) {
+    firebaseSyncRequested = true;
+    return;
+  }
+
+  const pending = readPendingState();
+  if(!pending) {
+    setSyncStatus('online', 'متصل ومزامن');
+    return;
+  }
+
+  firebaseWriteInFlight = true;
+  firebaseSyncRequested = false;
+  setSyncStatus('syncing', 'جاري حفظ التغييرات...');
+
+  try {
+    const pendingVersion = pending.version;
+    const localState = normalizeRemoteState(pending.state);
+    const baseState = normalizeRemoteState(pending.base || pending.state);
+
+    const result = await dbRef.transaction(remoteValue => {
+      const remoteState = normalizeRemoteState(remoteValue || {});
+      const merged = mergeState(localState, baseState, remoteState);
+      return {
+        ...merged,
+        lastUpdate: Date.now(),
+        lastClientId: firebaseClientId
+      };
+    });
+
+    const committed = result && result.snapshot ? result.snapshot.val() : null;
+    const committedState = normalizeRemoteState(committed || {});
+
+    firebaseBaseState = committedState;
+    applyStateToUI(committedState);
+    Store.set('members', members);
+    Store.set('groups', groups);
+    Store.set('assistants', assistants);
+    Store.set('logs', logs);
+
+    const currentPending = readPendingState();
+    if(!currentPending || Number(currentPending.version) === Number(pendingVersion)) {
+      clearPendingState(pendingVersion);
+    }
+
+    setSyncStatus('online', 'متصل ومزامن');
+  } catch (err) {
+    console.error('Firebase sync error:', err);
+    setSyncStatus('offline', 'بانتظار الاتصال...');
+  } finally {
+    firebaseWriteInFlight = false;
+    if(firebaseSyncRequested || readPendingState()) {
+      if(firebaseConnected) setTimeout(() => syncPendingNow(), 0);
     }
   }
-});
-
-if(currentUser) {
-  document.getElementById('currentUserName').textContent = currentUser.username;
-  showScreen('dashboard');
-  renderMembers();
-  renderMainGroups();
-  populateGroupSelects();
 }
 
-}).catch(err => {
-console.error('Firebase init error:', err);
-loadLocalOnly();
-});
+// ===== SAVE TO FIREBASE =====
+function saveAll() {
+  normalizeState();
+  const state = stateFromGlobals();
+
+  // Local first: this protects edits during network loss or refresh.
+  Store.set('members', members);
+  Store.set('groups', groups);
+  Store.set('assistants', assistants);
+  Store.set('logs', logs);
+
+  // Explicit local outbox survives reload/browser close.
+  savePendingState(state, firebaseBaseState || state);
+
+  if(firebaseAvailable && dbRef && firebaseConnected && dataInitialized) {
+    syncPendingNow();
+  } else if(firebaseAvailable) {
+    setSyncStatus('offline', 'بانتظار الاتصال...');
+  }
 }
+
+// ===== LOAD FROM FIREBASE =====
+function initFirebase() {
+  function loadLocalOnly() {
+    const pending = readPendingState();
+
+    if(pending && pending.state) {
+      applyStateToUI(normalizeRemoteState(pending.state));
+    } else {
+      members = Store.get('members', defaultMembers);
+      groups = Store.get('groups', defaultGroups);
+      assistants = Store.get('assistants', defaultAssistants);
+      logs = Store.get('logs', defaultLogs);
+      normalizeState();
+    }
+
+    firebaseBaseState = stateFromGlobals();
+    dataInitialized = true;
+    setSyncStatus('offline', 'وضع محلي — لا يوجد اتصال Firebase');
+
+    if(currentUser) {
+      document.getElementById('currentUserName').textContent = currentUser.username;
+      showScreen('dashboard');
+      renderMembers();
+      renderMainGroups();
+      populateGroupSelects();
+    }
+  }
+
+  if(!firebaseAvailable || !dbRef) {
+    loadLocalOnly();
+    return;
+  }
+
+  setSyncStatus('syncing', 'جاري جلب البيانات...');
+
+  // Firebase's /.info/connected is client-specific and is the correct way
+  // to know whether THIS browser currently has a server connection.
+  db.ref('.info/connected').on('value', snap => {
+    firebaseConnected = snap.val() === true;
+
+    if(firebaseConnected) {
+      setSyncStatus('syncing', 'تم الاتصال — جاري المزامنة...');
+      syncPendingNow();
+    } else {
+      setSyncStatus('offline', 'غير متصل — سيتم الحفظ تلقائياً');
+    }
+  });
+
+  dbRef.once('value').then(async snapshot => {
+    const remoteData = snapshot.val();
+    const remoteHasData = !!(remoteData && (
+      Array.isArray(remoteData.members) ||
+      Array.isArray(remoteData.groups) ||
+      Array.isArray(remoteData.assistants) ||
+      Array.isArray(remoteData.logs)
+    ));
+
+    const remoteState = normalizeRemoteState(remoteData || {});
+    const pending = readPendingState();
+
+    if(pending && pending.state) {
+      const localState = normalizeRemoteState(pending.state);
+      const baseState = normalizeRemoteState(pending.base || remoteState);
+      const merged = remoteHasData
+        ? mergeState(localState, baseState, remoteState)
+        : localState;
+
+      applyStateToUI(merged);
+      firebaseBaseState = remoteHasData ? remoteState : merged;
+      dataInitialized = true;
+
+      // Rewrite the pending record with a fresh merge base. The transaction
+      // below is what actually confirms the save.
+      savePendingState(merged, firebaseBaseState);
+    } else if(remoteHasData) {
+      applyStateToUI(remoteState);
+      firebaseBaseState = remoteState;
+      dataInitialized = true;
+    } else {
+      // First run: seed the cloud from existing local/default data.
+      const localState = stateFromGlobals();
+      applyStateToUI(localState);
+      firebaseBaseState = localState;
+      dataInitialized = true;
+      savePendingState(localState, localState);
+    }
+
+    if(currentUser) {
+      document.getElementById('currentUserName').textContent = currentUser.username;
+      showScreen('dashboard');
+      renderMembers();
+      renderMainGroups();
+      populateGroupSelects();
+    }
+
+    if(firebaseConnected) await syncPendingNow();
+  }).catch(err => {
+    console.error('Firebase init error:', err);
+    loadLocalOnly();
+  });
+
+  // Realtime updates from OTHER devices are applied immediately only when
+  // there is no local unsaved outbox. This prevents a remote update from
+  // erasing an offline edit that has not been committed yet.
+  dbRef.on('value', snapshot => {
+    const data = snapshot.val();
+    if(!data || !dataInitialized) return;
+    if(firebaseWriteInFlight || readPendingState()) return;
+
+    const incoming = normalizeRemoteState(data);
+    firebaseBaseState = incoming;
+    applyStateToUI(incoming);
+    Store.set('members', members);
+    Store.set('groups', groups);
+    Store.set('assistants', assistants);
+    Store.set('logs', logs);
+    setSyncStatus(firebaseConnected ? 'online' : 'offline',
+      firebaseConnected ? 'متصل ومزامن' : 'غير متصل — سيتم الحفظ تلقائياً');
+  });
+}
+
 // ===== SMOOTH PANEL TRANSITIONS =====
+
 // staggered pop-in for list rows whenever a panel becomes visible
 function animateListIn(container) {
 if(!container) return;
@@ -1232,9 +1692,6 @@ const count = members.filter(m => Number(m.groupId) === Number(g.id)).length;
 html += `
 <div class="member-item" onclick="openGroupDetail(${g.id})">
 <div class="member-info">
-<div class="member-avatar">
-<svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-</div>
 <div class="member-text">
 <div class="member-name">
 <span class="member-name-text">${esc(g.name)}</span>
@@ -1280,8 +1737,7 @@ if(!container) return;
 const groupMembers = members.filter(m => Number(m.groupId) === Number(groupId));
 if(groupMembers.length === 0) {
 container.innerHTML = '<div class="empty-state">لا يوجد أعضاء في هذه المجموعة</div>';
-return;
-}
+} else {
 let html = '';
 groupMembers.forEach(m => {
 const editBtnHtml = hasPerm('edit_members') ? `<div class="edit-x" onclick="event.stopPropagation(); openEditModal(${m.id})" title="تعديل"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></div>` : '';
@@ -1315,6 +1771,8 @@ html += `
 
 });
 container.innerHTML = html;
+}
+filterGroupDetailLog(currentGroupDetailFilter);
 }
 // ===== RENDER MEMBERS =====
 function renderMembers() {
@@ -1996,6 +2454,9 @@ renderControlLogs();
 if(document.getElementById('memberDetailScreen').classList.contains('active') && currentMemberId) {
 filterDetailLog(currentDetailFilter);
 }
+if(document.getElementById('groupDetailScreen').classList.contains('active') && currentGroupDetailId) {
+filterGroupDetailLog(currentGroupDetailFilter);
+}
 showToast('تم حذف السجل بنجاح', 'success');
 }
 function clearAllLogsPrompt() {
@@ -2015,6 +2476,58 @@ document.getElementById('confirmModal').className = 'modal confirm-modal';
 document.getElementById('confirmOverlay').classList.add('active');
 }
 // ===== MEMBER DETAIL SCREEN =====
+
+function filterGroupDetailLog(type = 'all') {
+currentGroupDetailFilter = type;
+const groupId = Number(currentGroupDetailId);
+const container = document.getElementById('groupDetailLogList');
+if(!container || !Number.isFinite(groupId)) return;
+
+const plusBtn = document.getElementById('groupBtnFilterPlus');
+const minusBtn = document.getElementById('groupBtnFilterMinus');
+const noteBtn = document.getElementById('groupBtnFilterNote');
+if(plusBtn) plusBtn.classList.toggle('active', type === 'plus');
+if(minusBtn) minusBtn.classList.toggle('active', type === 'minus');
+if(noteBtn) noteBtn.classList.toggle('active', type === 'note');
+
+const label = document.getElementById('groupDetailLogFilterLabel');
+if(label) {
+  if(type === 'plus') label.textContent = 'نقاط الإضافة';
+  else if(type === 'minus') label.textContent = 'نقاط الخصم';
+  else if(type === 'note') label.textContent = 'الملاحظات';
+  else label.textContent = 'الكل';
+}
+
+let groupLogs = (logs || []).filter(l =>
+  l.isGroupLog === true &&
+  Number(l.groupId) === groupId
+);
+
+if(type !== 'all') {
+  groupLogs = groupLogs.filter(l => l.type === type);
+}
+
+groupLogs.sort((a,b) => Number(b.id || 0) - Number(a.id || 0));
+
+if(groupLogs.length === 0) {
+  container.innerHTML = '<div class="empty-state">لا يوجد سجلات لهذه الفئة</div>';
+  return;
+}
+
+let html = '';
+groupLogs.forEach(l => {
+  html += `
+<div class="log-item-with-delete">
+<div class="log-left">
+<button class="log-delete-btn btn-press ${hasPerm('delete_logs') ? 'can-delete-log' : ''}" onclick="deleteSingleLog(${l.id})" title="حذف"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+<div><span class="log-action ${l.type}">${esc(l.action)}</span> (${esc(l.details)})</div>
+</div>
+<span class="log-time">${l.time}</span>
+</div>
+`;
+});
+container.innerHTML = html;
+}
 function openMemberDetail(id, origin = 'dashboard') {
 currentMemberId = id;
 detailOrigin = origin;
