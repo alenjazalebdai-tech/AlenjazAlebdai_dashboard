@@ -604,7 +604,7 @@ touch-action:pan-y;
 </head>
 <body>
 <script>
-const APP_VERSION = "v3.1";
+const APP_VERSION = "v3.2";
 (function(){
     const key = "app_ver_" + location.pathname;
     const stored = localStorage.getItem(key);
@@ -1075,7 +1075,7 @@ if(!naifAccount) {
 // existing full-access assistants working after the upgrade.
 assistants.forEach(a => {
 if(a.permissions.includes('add_assistants') && a.permissions.includes('edit_members')) {
-['add_groups','remove_groups','delete_logs'].forEach(p => { if(!a.permissions.includes(p)) a.permissions.push(p); });
+['delete_assistants','add_groups','remove_groups','delete_logs'].forEach(p => { if(!a.permissions.includes(p)) a.permissions.push(p); });
 }
 });
 if(currentUser) {
@@ -1156,7 +1156,7 @@ if(String(currentUser.username || '').trim().toLowerCase() === 'naif') return tr
 return Array.isArray(currentUser.permissions) && currentUser.permissions.includes(perm);
 }
 // ===== FIREBASE SYNC / OFFLINE OUTBOX =====
-const FULL_ASSISTANT_PERMISSIONS = ['add_points','remove_points','add_members','remove_members','edit_members','add_assistants','add_groups','remove_groups','delete_logs'];
+const FULL_ASSISTANT_PERMISSIONS = ['add_points','remove_points','add_members','remove_members','edit_members','add_assistants','delete_assistants','add_groups','remove_groups','delete_logs'];
 const FIREBASE_PENDING_KEY = 'membersAppFirebasePendingV2';
 
 function deepClone(value) {
@@ -1406,16 +1406,22 @@ async function syncPendingNow() {
 
     const committed = result && result.snapshot ? result.snapshot.val() : null;
     const committedState = normalizeRemoteState(committed || {});
-
     firebaseBaseState = committedState;
-    applyStateToUI(committedState);
-    Store.set('members', members);
-    Store.set('groups', groups);
-    Store.set('assistants', assistants);
-    Store.set('logs', logs);
 
+    // A newer local edit may have been queued while this transaction was
+    // running. In that case, NEVER paint the older committed snapshot over the
+    // newer UI state (otherwise the second/third/... newly-added assistant can
+    // briefly disappear and then get lost on the next write).
     const currentPending = readPendingState();
-    if(!currentPending || Number(currentPending.version) === Number(pendingVersion)) {
+    const pendingStillMatches = !currentPending ||
+      Number(currentPending.version) === Number(pendingVersion);
+
+    if(pendingStillMatches) {
+      applyStateToUI(committedState);
+      Store.set('members', members);
+      Store.set('groups', groups);
+      Store.set('assistants', assistants);
+      Store.set('logs', logs);
       clearPendingState(pendingVersion);
     }
 
