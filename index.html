@@ -604,7 +604,7 @@ touch-action:pan-y;
 </head>
 <body>
 <script>
-const APP_VERSION = "v3.5";
+const APP_VERSION = "v3.6";
 (function(){
     const key = "app_ver_" + location.pathname;
     const stored = localStorage.getItem(key);
@@ -1158,6 +1158,55 @@ return Array.isArray(currentUser.permissions) && currentUser.permissions.include
 // ===== FIREBASE SYNC / OFFLINE OUTBOX =====
 const FULL_ASSISTANT_PERMISSIONS = ['add_points','remove_points','add_members','remove_members','edit_members','add_assistants','delete_assistants','add_groups','remove_groups','delete_logs'];
 const FIREBASE_PENDING_KEY = 'membersAppFirebasePendingV2';
+const FIREBASE_DELETED_ASSISTANTS_KEY = 'membersAppDeletedAssistantsV1';
+
+function readDeletedAssistantIds() {
+  try {
+    const raw = localStorage.getItem(FIREBASE_DELETED_ASSISTANTS_KEY);
+    return raw ? JSON.parse(raw).map(String) : [];
+  } catch { return []; }
+}
+
+function addDeletedAssistantId(id) {
+  const ids = readDeletedAssistantIds();
+  const sid = String(id);
+  if(!ids.includes(sid)) ids.push(sid);
+  try { localStorage.setItem(FIREBASE_DELETED_ASSISTANTS_KEY, JSON.stringify(ids)); } catch {}
+}
+
+function clearDeletedAssistantId(id) {
+  const sid = String(id);
+  const ids = readDeletedAssistantIds().filter(x => x !== sid);
+  try { localStorage.setItem(FIREBASE_DELETED_ASSISTANTS_KEY, JSON.stringify(ids)); } catch {}
+}
+
+async function deleteAssistantFromFirebase(id) {
+  if(!firebaseAvailable || !dbRef || !firebaseConnected || !dataInitialized) return false;
+  const sid = String(id);
+  const result = await dbRef.transaction(remoteValue => {
+    const remote = remoteValue || {};
+    const list = Array.isArray(remote.assistants) ? remote.assistants : [];
+    return {
+      ...remote,
+      assistants: list.filter(a => String(a.id) !== sid),
+      lastUpdate: Date.now(),
+      lastClientId: firebaseClientId
+    };
+  });
+  if(!result || !result.committed) throw new Error('Assistant delete transaction was not committed');
+  clearDeletedAssistantId(sid);
+  return true;
+}
+
+async function flushAssistantDeletions() {
+  if(!firebaseAvailable || !dbRef || !firebaseConnected || !dataInitialized) return;
+  const ids = readDeletedAssistantIds();
+  for(const sid of ids) {
+    try { await deleteAssistantFromFirebase(sid); }
+    catch(err) { console.error('Assistant deletion sync error:', err); return; }
+  }
+}
+
 
 function deepClone(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
@@ -1299,7 +1348,9 @@ function mergeCollection(localItems, baseItems, remoteItems, options = {}) {
 function mergeAssistants(localItems, remoteItems) {
   const remote = mapById(remoteItems);
   const local = mapById(localItems);
-  const out = {...remote};
+  const deleted = new Set(readDeletedAssistantIds().map(String));
+  const out = {};
+  Object.keys(remote).forEach(id => { if(!deleted.has(String(id))) out[id] = remote[id]; });
 
   Object.keys(local).forEach(id => {
     const localAssistant = local[id];
@@ -1541,7 +1592,7 @@ function initFirebase() {
 
     if(firebaseConnected) {
       setSyncStatus('syncing', '');
-      syncPendingNow();
+      flushAssistantDeletions().then(() => syncPendingNow());
     } else {
       setSyncStatus('offline', '');
     }
@@ -1594,7 +1645,10 @@ function initFirebase() {
       populateGroupSelects();
     }
 
-    if(firebaseConnected) await syncPendingNow();
+    if(firebaseConnected) {
+      await flushAssistantDeletions();
+      await syncPendingNow();
+    }
   }).catch(err => {
     console.error('Firebase init error:', err);
     loadLocalOnly();
@@ -1609,6 +1663,8 @@ function initFirebase() {
     if(firebaseWriteInFlight || readPendingState()) return;
 
     const incoming = normalizeRemoteState(data);
+    const deletedIds = new Set(readDeletedAssistantIds().map(String));
+    incoming.assistants = incoming.assistants.filter(a => !deletedIds.has(String(a.id)));
     firebaseBaseState = incoming;
     applyStateToUI(incoming);
     Store.set('members', members);
@@ -2647,10 +2703,33 @@ showToast('لا يمكنك حذف حسابك بنفسك');
 return;
 }
 confirmCallback = function() {
-assistants = assistants.filter(x => String(x.id) !== String(id));
-saveAll();
-renderControlAssistants();
-showToast('تم حذف المساعد بنجاح', 'success');
+  const deletedId = String(id);
+  addDeletedAssistantId(deletedId);
+  assistants = assistants.filter(x => String(x.id) !== deletedId);
+  // Save the remaining list locally without allowing the generic merge to
+  // resurrect the deleted record; the tombstone above is consulted by the merge.
+  saveAll();
+  renderControlAssistants();
+  if(firebaseAvailable && dbRef && firebaseConnected && dataInitialized) {
+    deleteAssistantFromFirebase(deletedId)
+      .then(() => {
+        // Refresh the cloud state after the explicit deletion transaction.
+        return dbRef.once('value');
+      })
+      .then(snapshot => {
+        const state = normalizeRemoteState(snapshot.val() || {});
+        firebaseBaseState = state;
+        applyStateToUI(state);
+        Store.set('assistants', assistants);
+        showToast('تم حذف المساعد بنجاح', 'success');
+      })
+      .catch(err => {
+        console.error('Assistant delete sync error:', err);
+        showToast('تم حذف المساعد محليًا، وسيتم حذفه من باقي الأجهزة عند المزامنة', 'success');
+      });
+  } else {
+    showToast('تم حذف المساعد محليًا، وسيتم حذفه من باقي الأجهزة عند عودة الاتصال', 'success');
+  }
 };
 document.getElementById('confirmTitle').textContent = 'حذف المساعد';
 document.getElementById('confirmMsg').textContent = `هل أنت متأكد من حذف المساعد "${a.username}"؟`;
