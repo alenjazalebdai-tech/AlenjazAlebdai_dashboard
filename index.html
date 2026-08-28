@@ -604,7 +604,7 @@ touch-action:pan-y;
 </head>
 <body>
 <script>
-const APP_VERSION = "v3.2";
+const APP_VERSION = "v3.3";
 (function(){
     const key = "app_ver_" + location.pathname;
     const stored = localStorage.getItem(key);
@@ -1200,6 +1200,7 @@ function normalizeRemoteState(data) {
       const isNaif = username.toLowerCase() === 'naif';
       return {
         ...a,
+        id: a.id == null ? ('ast_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8)) : String(a.id),
         username: isNaif ? 'Naif' : username,
         password: isNaif ? '0Naif1' : a.password,
         permissions: isNaif ? FULL_ASSISTANT_PERMISSIONS.slice() : (Array.isArray(a.permissions) ? [...a.permissions] : [])
@@ -1294,6 +1295,40 @@ function mergeCollection(localItems, baseItems, remoteItems, options = {}) {
   return Object.values(out);
 }
 
+
+function mergeAssistants(localItems, remoteItems) {
+  const remote = mapById(remoteItems);
+  const local = mapById(localItems);
+  const out = {...remote};
+
+  Object.keys(local).forEach(id => {
+    const localAssistant = local[id];
+    const remoteAssistant = remote[id];
+
+    // Never remove a locally-created assistant just because it is not present
+    // in an older remote snapshot.
+    if(!remoteAssistant) {
+      out[id] = deepClone(localAssistant);
+      return;
+    }
+
+    // Keep the local assistant record when it has a newer/explicit local edit.
+    // This covers permission edits and credential changes without replacing
+    // unrelated assistants.
+    out[id] = {
+      ...deepClone(remoteAssistant),
+      ...deepClone(localAssistant),
+      permissions: Array.isArray(localAssistant.permissions)
+        ? [...localAssistant.permissions]
+        : (Array.isArray(remoteAssistant.permissions) ? [...remoteAssistant.permissions] : [])
+    };
+  });
+
+  // Deletions are handled explicitly by the delete operation and therefore
+  // should not be inferred from a stale local list.
+  return Object.values(out);
+}
+
 function mergeState(localState, baseState, remoteState) {
   const local = normalizeRemoteState(localState);
   const base = normalizeRemoteState(baseState);
@@ -1302,7 +1337,7 @@ function mergeState(localState, baseState, remoteState) {
   return {
     members: mergeCollection(local.members, base.members, remote.members, {pointDelta:true}),
     groups: mergeCollection(local.groups, base.groups, remote.groups, {pointDelta:true}),
-    assistants: mergeCollection(local.assistants, base.assistants),
+    assistants: mergeAssistants(local.assistants, remote.assistants),
     logs: mergeCollection(local.logs, base.logs)
   };
 }
@@ -1423,6 +1458,12 @@ async function syncPendingNow() {
       Store.set('assistants', assistants);
       Store.set('logs', logs);
       clearPendingState(pendingVersion);
+    }
+
+    // If a newer local edit was queued while this transaction was in flight,
+    // immediately retry it against the freshly committed remote state.
+    if(!pendingStillMatches && readPendingState()) {
+      firebaseSyncRequested = true;
     }
 
     setSyncStatus('online', '');
@@ -2491,7 +2532,7 @@ const cb = document.getElementById(`perm_${p}`);
 if(cb && cb.checked) perms.push(p);
 });
 const newAst = {
-id: Date.now() + Math.random(),
+id: 'ast_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8),
 username: username,
 password: password,
 permissions: perms
@@ -2551,7 +2592,7 @@ ${ASSISTANT_PERMISSION_KEYS.map(p => `
 <div class="perm-card ${selected.includes(p) ? 'selected' : ''}" onclick="toggleAssistantPerm(this)">
 <input type="checkbox" id="assistant_edit_perm_${p}" value="${p}" ${selected.includes(p) ? 'checked' : ''}>
 <span class="perm-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
-<label for="assistant_edit_perm_${p}">${names[p]}</label>
+<label for="assistant_edit_perm_${p}" onclick="event.stopPropagation()">${names[p]}</label>
 </div>`).join('')}
 </div>
 <button class="modal-submit btn-press" onclick="saveAssistantPermissions(${a.id})">حفظ الصلاحيات</button>
@@ -2606,7 +2647,7 @@ showToast('لا يمكنك حذف حسابك بنفسك');
 return;
 }
 confirmCallback = function() {
-assistants = assistants.filter(x => x.id !== id);
+assistants = assistants.filter(x => String(x.id) !== String(id));
 saveAll();
 renderControlAssistants();
 showToast('تم حذف المساعد بنجاح', 'success');
