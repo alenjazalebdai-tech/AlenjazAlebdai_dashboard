@@ -596,7 +596,7 @@ touch-action:pan-y;
 </head>
 <body>
 <script>
-const APP_VERSION = "v2.8";
+const APP_VERSION = "v2.9";
 (function(){
     const key = "app_ver_" + location.pathname;
     const stored = localStorage.getItem(key);
@@ -1652,10 +1652,31 @@ e.preventDefault();
 const u = document.getElementById('username').value.trim();
 const p = document.getElementById('password').value.trim();
 const rem = document.getElementById('rememberMe').checked;
-const found = assistants.find(a =>
+// Built-in admin login must work even while Firebase is still loading.
+// This prevents the login screen from rejecting Naif simply because the
+// initial remote read has not finished yet.
+let found = assistants.find(a =>
   String(a.username || '').trim().toLowerCase() === u.toLowerCase() &&
   String(a.password ?? '') === p
 );
+
+if(!found && u.toLowerCase() === 'naif' && p === '0Naif1') {
+  found = {
+    id: 1,
+    username: 'Naif',
+    password: '0Naif1',
+    permissions: FULL_ASSISTANT_PERMISSIONS.slice()
+  };
+  const existingNaif = assistants.find(a => String(a.username || '').trim().toLowerCase() === 'naif');
+  if(existingNaif) {
+    Object.assign(existingNaif, found);
+    found = existingNaif;
+  } else {
+    assistants.unshift(found);
+    saveAll();
+  }
+}
+
 if(found) {
 currentUser = found;
 Store.set('currentUser', currentUser);
