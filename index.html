@@ -604,7 +604,7 @@ touch-action:pan-y;
 </head>
 <body>
 <script>
-const APP_VERSION = "v3.3";
+const APP_VERSION = "v3.4";
 (function(){
     const key = "app_ver_" + location.pathname;
     const stored = localStorage.getItem(key);
@@ -1079,7 +1079,7 @@ if(a.permissions.includes('add_assistants') && a.permissions.includes('edit_memb
 }
 });
 if(currentUser) {
-const fresh = assistants.find(a => Number(a.id) === Number(currentUser.id));
+const fresh = assistants.find(a => String(a.id) === String(currentUser.id));
 if(fresh) currentUser = fresh;
 else currentUser = null;
 }
@@ -2481,7 +2481,7 @@ const isMainAdmin = a.username === 'Naif';
 const isCurrentUser = currentUser && String(a.username).toLowerCase() === String(currentUser.username).toLowerCase();
 const canDeleteAssistant = hasPerm('delete_assistants') && !isMainAdmin && !isCurrentUser;
 const canEditAssistant = hasPerm('add_assistants') && !isMainAdmin;
-const assistantActions = `${canEditAssistant ? `<button class="assistant-edit-btn btn-press" onclick="openAssistantPermissionsModal(${a.id})" title="تعديل الصلاحيات"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75-10.06 10.06zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0-1.41 0-1.02.39-1.41l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>` : ''}${canDeleteAssistant ? `<div class="delete-x" onclick="promptDeleteAssistant(${a.id})" title="حذف"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></div>` : ''}`;
+const assistantActions = `${canEditAssistant ? `<button class="assistant-edit-btn btn-press" onclick="openAssistantPermissionsModal(${JSON.stringify(String(a.id))})" title="تعديل الصلاحيات"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75-10.06 10.06zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0-1.41 0-1.02.39-1.41l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>` : ''}${canDeleteAssistant ? `<div class="delete-x" onclick="promptDeleteAssistant(${JSON.stringify(String(a.id))})" title="حذف"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></div>` : ''}`;
 
 let permsTags = '';
 if(isMainAdmin) {
@@ -2561,7 +2561,7 @@ if(!hasPerm('add_assistants')) {
 showToast('ليس لديك صلاحية تعديل صلاحيات المساعدين');
 return;
 }
-const a = assistants.find(x => Number(x.id) === Number(id));
+const a = assistants.find(x => String(x.id) === String(id));
 if(!a) return;
 if(String(a.username || '').trim().toLowerCase() === 'naif') {
 showToast('لا يمكن تعديل صلاحيات مدير النظام');
@@ -2617,7 +2617,7 @@ if(!hasPerm('add_assistants')) {
 showToast('ليس لديك صلاحية تعديل صلاحيات المساعدين');
 return;
 }
-const a = assistants.find(x => Number(x.id) === Number(id));
+const a = assistants.find(x => String(x.id) === String(id));
 if(!a) return;
 if(String(a.username || '').trim().toLowerCase() === 'naif') {
 showToast('لا يمكن تعديل صلاحيات مدير النظام');
