@@ -593,10 +593,18 @@ touch-action:pan-y;
 @media(max-width:700px){.sync-status{font-size:.68rem;padding:6px 9px}}
 </style>
 
+<style id="assistant-permissions-edit-fix">
+.assistant-card-name .member-name-icons{display:flex;align-items:center;gap:8px;margin-right:4px}
+.assistant-edit-btn{width:28px;height:28px;border-radius:8px;border:none;background:rgba(139,92,246,.12);color:#c4b5fd;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s ease}
+.assistant-edit-btn:hover{background:rgba(139,92,246,.28);transform:scale(1.08)}
+.assistant-edit-btn svg{width:16px;height:16px;fill:currentColor}
+.assistant-perm-editor{display:flex;flex-direction:column;gap:10px}
+.assistant-perm-editor .perm-card{width:100%}
+</style>
 </head>
 <body>
 <script>
-const APP_VERSION = "v2.9";
+const APP_VERSION = "v3.1";
 (function(){
     const key = "app_ver_" + location.pathname;
     const stored = localStorage.getItem(key);
@@ -677,9 +685,7 @@ const APP_VERSION = "v2.9";
 </div>
 <div class="dashboard-screen screen" id="dashboardScreen">
 <div class="dashboard-header">
-<div id="syncStatus" class="sync-status offline" aria-live="polite">
-<span class="sync-dot"></span><span id="syncStatusText">جاري الاتصال...</span>
-</div>
+<div id="syncStatus" class="sync-status offline" aria-live="polite" style="display:none"><span class="sync-dot"></span><span id="syncStatusText"></span></div>
 <h2 id="mainListTitle">قائمة الأعضاء</h2>
 <div class="user-info">
 <span id="currentUserName">المستخدم</span>
@@ -876,6 +882,11 @@ const APP_VERSION = "v2.9";
 <span class="perm-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
 <label for="perm_add_assistants">اضافة مساعدين</label>
 </div>
+<div class="perm-card" onclick="togglePerm(this,'delete_assistants')">
+<input type="checkbox" id="perm_delete_assistants" value="delete_assistants">
+<span class="perm-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+<label for="perm_delete_assistants">حذف المساعدين</label>
+</div>
 <div class="perm-card" onclick="togglePerm(this,'add_groups')">
 <input type="checkbox" id="perm_add_groups" value="add_groups">
 <span class="perm-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
@@ -916,6 +927,15 @@ const APP_VERSION = "v2.9";
 </button>
 </div>
 <div class="modal-body" id="modalBody"></div>
+</div>
+</div>
+<div class="modal-overlay" id="assistantPermOverlay">
+<div class="modal purple" id="assistantPermModal">
+<div class="modal-header">
+<div class="modal-title">تعديل صلاحيات المساعد</div>
+<button class="modal-close btn-press" onclick="closeAssistantPermModal()"><svg viewBox="0 0 24 24"><path d="M18.3 5.71L12 12l6.3 6.29-1.41 1.42L10.59 13.41 4.29 19.71 2.88 18.3 9.17 12 2.88 5.71 4.29 4.29l6.3 6.3 6.29-6.3z"/></svg></button>
+</div>
+<div class="modal-body" id="assistantPermBody"></div>
 </div>
 </div>
 <div class="modal-overlay confirm-overlay" id="confirmOverlay">
@@ -1288,11 +1308,12 @@ function mergeState(localState, baseState, remoteState) {
 }
 
 function savePendingState(state, baseState) {
+  const existing = readPendingState();
   const pending = {
     version: Date.now() + Math.random(),
     state: deepClone(state),
-    base: deepClone(baseState),
-    createdAt: Date.now()
+    base: deepClone(existing && existing.base ? existing.base : baseState),
+    createdAt: existing && existing.createdAt ? existing.createdAt : Date.now()
   };
   try { localStorage.setItem(FIREBASE_PENDING_KEY, JSON.stringify(pending)); } catch {}
   return pending;
@@ -1317,9 +1338,8 @@ function setSyncStatus(mode, text) {
   const el = document.getElementById('syncStatus');
   const label = document.getElementById('syncStatusText');
   if(!el || !label) return;
-  el.classList.remove('online','offline','syncing');
-  el.classList.add(mode);
-  label.textContent = text;
+  el.style.display = 'none';
+  label.textContent = '';
 }
 
 function applyStateToUI(state) {
@@ -1361,13 +1381,13 @@ async function syncPendingNow() {
 
   const pending = readPendingState();
   if(!pending) {
-    setSyncStatus('online', 'متصل ومزامن');
+    setSyncStatus('online', '');
     return;
   }
 
   firebaseWriteInFlight = true;
   firebaseSyncRequested = false;
-  setSyncStatus('syncing', 'جاري حفظ التغييرات...');
+  setSyncStatus('syncing', '');
 
   try {
     const pendingVersion = pending.version;
@@ -1399,10 +1419,10 @@ async function syncPendingNow() {
       clearPendingState(pendingVersion);
     }
 
-    setSyncStatus('online', 'متصل ومزامن');
+    setSyncStatus('online', '');
   } catch (err) {
     console.error('Firebase sync error:', err);
-    setSyncStatus('offline', 'بانتظار الاتصال...');
+    setSyncStatus('offline', '');
   } finally {
     firebaseWriteInFlight = false;
     if(firebaseSyncRequested || readPendingState()) {
@@ -1428,7 +1448,7 @@ function saveAll() {
   if(firebaseAvailable && dbRef && firebaseConnected && dataInitialized) {
     syncPendingNow();
   } else if(firebaseAvailable) {
-    setSyncStatus('offline', 'بانتظار الاتصال...');
+    setSyncStatus('offline', '');
   }
 }
 
@@ -1449,7 +1469,7 @@ function initFirebase() {
 
     firebaseBaseState = stateFromGlobals();
     dataInitialized = true;
-    setSyncStatus('offline', 'وضع محلي — لا يوجد اتصال Firebase');
+    setSyncStatus('offline', '');
 
     if(currentUser) {
       document.getElementById('currentUserName').textContent = currentUser.username;
@@ -1465,7 +1485,7 @@ function initFirebase() {
     return;
   }
 
-  setSyncStatus('syncing', 'جاري جلب البيانات...');
+  setSyncStatus('syncing', '');
 
   // Firebase's /.info/connected is client-specific and is the correct way
   // to know whether THIS browser currently has a server connection.
@@ -1473,10 +1493,10 @@ function initFirebase() {
     firebaseConnected = snap.val() === true;
 
     if(firebaseConnected) {
-      setSyncStatus('syncing', 'تم الاتصال — جاري المزامنة...');
+      setSyncStatus('syncing', '');
       syncPendingNow();
     } else {
-      setSyncStatus('offline', 'غير متصل — سيتم الحفظ تلقائياً');
+      setSyncStatus('offline', '');
     }
   });
 
@@ -1549,7 +1569,7 @@ function initFirebase() {
     Store.set('assistants', assistants);
     Store.set('logs', logs);
     setSyncStatus(firebaseConnected ? 'online' : 'offline',
-      firebaseConnected ? 'متصل ومزامن' : 'غير متصل — سيتم الحفظ تلقائياً');
+      firebaseConnected ? '' : '');
   });
 }
 
@@ -2403,6 +2423,7 @@ add_members: 'إضافة أعضاء',
 remove_members: 'إزالة أعضاء',
 edit_members: 'تعديل أعضاء',
 add_assistants: 'إضافة مساعدين',
+delete_assistants: 'حذف المساعدين',
 add_groups: 'إضافة مجموعات',
 remove_groups: 'حذف مجموعات',
 delete_logs: 'حذف السجل'
@@ -2411,7 +2432,9 @@ let html = '';
 assistants.forEach(a => {
 const isMainAdmin = a.username === 'Naif';
 const isCurrentUser = currentUser && String(a.username).toLowerCase() === String(currentUser.username).toLowerCase();
-const deleteBtn = (isMainAdmin || isCurrentUser) ? '' : `<div class="delete-x" onclick="promptDeleteAssistant(${a.id})" title="حذف"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></div>`;
+const canDeleteAssistant = hasPerm('delete_assistants') && !isMainAdmin && !isCurrentUser;
+const canEditAssistant = hasPerm('add_assistants') && !isMainAdmin;
+const assistantActions = `${canEditAssistant ? `<button class="assistant-edit-btn btn-press" onclick="openAssistantPermissionsModal(${a.id})" title="تعديل الصلاحيات"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75-10.06 10.06zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0-1.41 0-1.02.39-1.41l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>` : ''}${canDeleteAssistant ? `<div class="delete-x" onclick="promptDeleteAssistant(${a.id})" title="حذف"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></div>` : ''}`;
 
 let permsTags = '';
 if(isMainAdmin) {
@@ -2430,7 +2453,7 @@ html += `
       <div class="assistant-card-name">
         <span class="assistant-card-name-text">${esc(a.username)}</span>
         <div class="member-name-icons">
-          ${deleteBtn}
+          ${assistantActions}
         </div>
       </div>
     </div>
@@ -2457,12 +2480,12 @@ showToast('اسم المستخدم هذا مستخدم بالفعل');
 return;
 }
 const perms = [];
-['add_points','remove_points','add_members','remove_members','edit_members','add_assistants','add_groups','remove_groups','delete_logs'].forEach(p => {
+['add_points','remove_points','add_members','remove_members','edit_members','add_assistants','delete_assistants','add_groups','remove_groups','delete_logs'].forEach(p => {
 const cb = document.getElementById(`perm_${p}`);
 if(cb && cb.checked) perms.push(p);
 });
 const newAst = {
-id: Date.now(),
+id: Date.now() + Math.random(),
 username: username,
 password: password,
 permissions: perms
@@ -2480,10 +2503,99 @@ if(cb) cb.checked = false;
 showToast('تمت إضافة المساعد بنجاح', 'success');
 switchControlTab('assistants');
 }
+
+const ASSISTANT_PERMISSION_KEYS = [
+'add_points','remove_points','add_members','remove_members','edit_members',
+'add_assistants','delete_assistants','add_groups','remove_groups','delete_logs'
+];
+
+function openAssistantPermissionsModal(id) {
+if(!hasPerm('add_assistants')) {
+showToast('ليس لديك صلاحية تعديل صلاحيات المساعدين');
+return;
+}
+const a = assistants.find(x => Number(x.id) === Number(id));
+if(!a) return;
+if(String(a.username || '').trim().toLowerCase() === 'naif') {
+showToast('لا يمكن تعديل صلاحيات مدير النظام');
+return;
+}
+
+const body = document.getElementById('assistantPermBody');
+if(!body) return;
+
+const names = {
+add_points:'إضافة نقاط',
+remove_points:'خصم نقاط',
+add_members:'إضافة أعضاء',
+remove_members:'إزالة أعضاء',
+edit_members:'تعديل بيانات الأعضاء',
+add_assistants:'إضافة مساعدين',
+delete_assistants:'حذف المساعدين',
+add_groups:'إضافة مجموعات',
+remove_groups:'حذف مجموعات',
+delete_logs:'حذف السجل'
+};
+
+const selected = Array.isArray(a.permissions) ? a.permissions : [];
+body.innerHTML = `
+<div style="font-size:.95rem;color:#d4b896;margin-bottom:2px">المساعد: <strong style="color:#fff">${esc(a.username)}</strong></div>
+<div class="assistant-perm-editor">
+${ASSISTANT_PERMISSION_KEYS.map(p => `
+<div class="perm-card ${selected.includes(p) ? 'selected' : ''}" onclick="toggleAssistantPerm(this)">
+<input type="checkbox" id="assistant_edit_perm_${p}" value="${p}" ${selected.includes(p) ? 'checked' : ''}>
+<span class="perm-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+<label for="assistant_edit_perm_${p}">${names[p]}</label>
+</div>`).join('')}
+</div>
+<button class="modal-submit btn-press" onclick="saveAssistantPermissions(${a.id})">حفظ الصلاحيات</button>
+`;
+document.getElementById('assistantPermOverlay').classList.add('active');
+}
+
+function toggleAssistantPerm(card) {
+const cb = card.querySelector('input[type="checkbox"]');
+if(!cb) return;
+cb.checked = !cb.checked;
+card.classList.toggle('selected', cb.checked);
+}
+
+function closeAssistantPermModal() {
+const overlay = document.getElementById('assistantPermOverlay');
+if(overlay) overlay.classList.remove('active');
+}
+
+function saveAssistantPermissions(id) {
+if(!hasPerm('add_assistants')) {
+showToast('ليس لديك صلاحية تعديل صلاحيات المساعدين');
+return;
+}
+const a = assistants.find(x => Number(x.id) === Number(id));
+if(!a) return;
+if(String(a.username || '').trim().toLowerCase() === 'naif') {
+showToast('لا يمكن تعديل صلاحيات مدير النظام');
+return;
+}
+
+a.permissions = ASSISTANT_PERMISSION_KEYS.filter(p => {
+const cb = document.getElementById(`assistant_edit_perm_${p}`);
+return cb && cb.checked;
+});
+
+saveAll();
+renderControlAssistants();
+closeAssistantPermModal();
+showToast('تم تحديث صلاحيات المساعد بنجاح', 'success');
+}
+
 function promptDeleteAssistant(id) {
+if(!hasPerm('delete_assistants')) {
+showToast('ليس لديك صلاحية حذف المساعدين');
+return;
+}
 const a = assistants.find(x => x.id === id);
 if(!a) return;
-if((currentUser && String(a.username).toLowerCase() === String(currentUser.username).toLowerCase()) || a.username === 'Naif' ) {
+if((currentUser && String(a.username).toLowerCase() === String(currentUser.username).toLowerCase()) || String(a.username).toLowerCase() === 'naif' ) {
 showToast('لا يمكنك حذف حسابك بنفسك');
 return;
 }
