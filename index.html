@@ -338,7 +338,7 @@ body{font-size:18px}
 .group-picker-trigger:hover,.group-picker.open .group-picker-trigger{background:rgba(255,255,255,.08);border-color:rgba(217,119,6,.45);box-shadow:0 0 0 3px rgba(217,119,6,.1)}
 .group-picker-trigger .picker-arrow{transition:transform .25s ease;color:#d4b896}
 .group-picker.open .picker-arrow{transform:rotate(180deg)}
-.group-picker-menu{position:absolute;z-index:500;top:calc(100% + 8px);right:0;left:0;background:rgba(26,18,8,.98);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:8px;box-shadow:0 20px 50px rgba(0,0,0,.55);display:none;max-height:260px;overflow:auto;backdrop-filter:blur(30px)}
+.group-picker-menu{position:relative;z-index:5;top:auto;right:auto;left:auto;width:100%;margin-top:8px;background:rgba(26,18,8,.98);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:8px;box-shadow:0 20px 50px rgba(0,0,0,.55);display:none;max-height:260px;overflow:auto;backdrop-filter:blur(30px);box-sizing:border-box}
 .group-picker.open .group-picker-menu{display:block;animation:pickerIn .2s ease}
 @keyframes pickerIn{from{opacity:0;transform:translateY(-6px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 .group-picker-option{display:flex;align-items:center;justify-content:space-between;width:100%;padding:12px 14px;border:0;border-radius:11px;background:transparent;color:#d4b896;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:.9rem;cursor:pointer;text-align:right;transition:all .2s ease}
@@ -393,14 +393,8 @@ touch-action:pan-y;
 }
 </style>
 <style>
-/* Keep the group picker in normal document flow on phones so it does not overlap controls below. */
-@media (max-width: 700px){
-  .group-picker.open .group-picker-menu{
-    position:relative !important;
-    top:auto !important; right:auto !important; left:auto !important;
-    width:100%; margin-top:8px; z-index:auto !important;
-  }
-}
+/* Group picker menu now always renders in normal document flow (see .group-picker-menu
+   base rule) so it pushes surrounding content down instead of overlapping it, at any width. */
 </style>
 
 <style id="member-detail-scroll-final-fix">
@@ -571,15 +565,15 @@ touch-action:pan-y;
     }
 }
 
+</style>
 <style id="group-detail-history-fix">
 .group-detail-actions{width:100%;max-width:700px;}
 .group-detail-log-section{width:100%;max-width:700px;}
 @media(max-width:700px){
-  .group-detail-actions{grid-template-columns:1fr;}
+  .group-detail-actions{grid-template-columns:repeat(3,1fr);}
   .group-detail-log-section{max-height:none!important;overflow:visible!important;margin-bottom:40px;}
   .group-detail-log-list{max-height:none!important;overflow:visible!important;padding-bottom:24px;}
 }
-</style>
 </style>
 <style id="firebase-sync-status">
 .sync-status{display:flex;align-items:center;gap:8px;padding:7px 11px;border-radius:999px;font-size:.72rem;font-weight:600;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#d4b896;white-space:nowrap}
@@ -601,10 +595,61 @@ touch-action:pan-y;
 .assistant-perm-editor{display:flex;flex-direction:column;gap:10px}
 .assistant-perm-editor .perm-card{width:100%}
 </style>
+<style id="member-detail-profile-layout-fix">
+/* Member detail profile: no person icon; name left, points right. */
+#memberDetailScreen .member-profile-card{
+  direction:ltr !important;
+  flex-direction:row !important;
+  justify-content:space-between !important;
+  align-items:center !important;
+}
+#memberDetailScreen .member-profile-avatar{display:none !important;}
+#memberDetailScreen .member-profile-info{
+  order:1 !important;
+  align-items:flex-start !important;
+  text-align:left !important;
+  direction:rtl !important;
+  min-width:0 !important;
+}
+#memberDetailScreen .member-profile-name,
+#memberDetailScreen .member-profile-rank{
+  width:100%;
+  text-align:left !important;
+}
+#memberDetailScreen .member-profile-points{
+  order:2 !important;
+  margin-left:auto !important;
+  flex-shrink:0 !important;
+}
+@media(max-width:480px){
+  #memberDetailScreen .member-profile-card{padding:18px !important;gap:14px !important;}
+  #memberDetailScreen .member-profile-name{font-size:1.1rem !important;}
+  #memberDetailScreen .member-profile-points{font-size:.95rem !important;padding:4px 11px !important;}
+}
+</style>
+<style>
+/* Member detail card: name flush left, points flush right, no person icon. */
+#memberProfileCard{display:flex !important;flex-direction:row !important;flex-wrap:nowrap !important;justify-content:space-between !important;align-items:center !important;width:100% !important;box-sizing:border-box !important;}
+#memberProfileCard .member-profile-avatar{display:none !important;}
+#memberProfileCard .member-profile-info{order:1 !important;flex:1 1 auto !important;min-width:0 !important;align-items:flex-start !important;text-align:left !important;}
+#memberProfileCard .member-profile-name,#memberProfileCard .member-profile-rank{text-align:left !important;direction:rtl !important;width:100% !important;}
+#memberProfileCard .member-profile-points{order:2 !important;flex:0 0 auto !important;margin-left:auto !important;margin-right:0 !important;white-space:nowrap !important;}
+@media(max-width:700px){#memberProfileCard{flex-wrap:nowrap !important;gap:12px !important;}#memberProfileCard .member-profile-info{min-width:0 !important;}#memberProfileCard .member-profile-points{flex-shrink:0 !important;}}
+</style>
+<style id="sort-toggle-btn-style">
+.sort-toggle-btn{padding:7px 14px;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:.78rem;font-weight:600;color:#d4b896;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:100px;cursor:pointer;transition:all .25s ease;white-space:nowrap}
+.sort-toggle-btn:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.2)}
+.sort-toggle-btn.active{background:rgba(217,119,6,.22);border-color:rgba(217,119,6,.45);color:#fbbf24}
+#mainMembersSortBar,#groupMembersSortBar{align-items:center}
+@media(max-width:480px){
+  .sort-toggle-btn{padding:6px 12px;font-size:.72rem}
+  #mainMembersSortBar span,#groupMembersSortBar span{font-size:.72rem}
+}
+</style>
 </head>
 <body>
 <script>
-const APP_VERSION = "v3.6";
+const APP_VERSION = "v3.8";
 (function(){
     const key = "app_ver_" + location.pathname;
     const stored = localStorage.getItem(key);
@@ -707,6 +752,11 @@ const APP_VERSION = "v3.6";
 <input type="text" class="search-box" id="mainMemberSearch" placeholder="ابحث عن عضو بالاسم أو المنصب..." oninput="searchMainMembers()">
 </div>
 <div class="search-results" id="mainSearchResults" style="width:100%;max-width:700px"></div>
+<div style="width:100%;max-width:700px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px" id="mainMembersSortBar">
+<span style="color:rgba(212,184,150,.55);font-size:.78rem">فرز حسب:</span>
+<button class="sort-toggle-btn btn-press" id="mainSortNameBtn" onclick="setMainMemberSort('name')">أبجدي</button>
+<button class="sort-toggle-btn btn-press" id="mainSortPointsBtn" onclick="setMainMemberSort('points')">النقاط</button>
+</div>
 <div class="members-list" id="membersList"></div>
 <div class="members-list" id="groupsMainList" style="display:none;"></div>
 </div>
@@ -751,7 +801,6 @@ const APP_VERSION = "v3.6";
 <button class="logout-btn btn-press" style="color:#d4b896;border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.05)" onclick="showScreen('dashboard','back')">رجوع للقائمة</button>
 </div>
 </div>
-<div style="width:100%;max-width:700px;display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px" id="groupQuickActions"></div>
 <div class="detail-actions group-detail-actions">
 <button class="detail-action-btn points-btn btn-press" id="groupBtnFilterPlus" onclick="filterGroupDetailLog('plus')">
 <svg viewBox="0 0 24 24" fill="#22c55e"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
@@ -766,12 +815,19 @@ const APP_VERSION = "v3.6";
 <span>الملاحظات</span>
 </button>
 </div>
+<div style="width:100%;max-width:700px;display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px" id="groupQuickActions"></div>
+<div style="width:100%;max-width:700px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px" id="groupMembersSortBar">
+<span style="color:rgba(212,184,150,.55);font-size:.78rem">فرز الأعضاء:</span>
+<button class="sort-toggle-btn btn-press" id="groupSortManualBtn" onclick="setGroupMemberSort('manual')">يدوي</button>
+<button class="sort-toggle-btn btn-press" id="groupSortNameBtn" onclick="setGroupMemberSort('name')">أبجدي</button>
+<button class="sort-toggle-btn btn-press" id="groupSortPointsBtn" onclick="setGroupMemberSort('points')">حسب النقاط</button>
+</div>
 <div class="members-list" id="groupDetailMembersList"></div>
 <div class="detail-log-section group-detail-log-section">
 <div class="detail-log-header"><h3><svg viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 1-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>سجل الاحداث</h3><span style="color:rgba(212,184,150,.5);font-size:.8rem" id="groupDetailLogFilterLabel">الكل</span></div>
 <div class="detail-log-list group-detail-log-list" id="groupDetailLogList"></div>
 </div>
-<div class="members-list" id="groupDetailMembersList"></div>
+
 </div>
 <div class="control-screen screen" id="controlScreen">
 <div class="dashboard-header">
@@ -1035,6 +1091,8 @@ let selectedPermissions = [];
 let activeMainTab = 'members';
 let detailOrigin = 'dashboard';
 let currentGroupDetailId = null;
+let mainMemberSortMode = 'none'; // 'none' | 'name' | 'points'
+let groupMemberSortMode = 'manual'; // 'manual' | 'name' | 'points'
 // ===== DATA NORMALIZATION =====
 function normalizeState() {
 members = (members || []).map(m => ({...m, points: Number.isFinite(Number(m.points)) ? Number(m.points) : 0, groupId: m.groupId === '' || m.groupId == null ? null : Number(m.groupId)}));
@@ -1842,6 +1900,7 @@ const mSearch = document.getElementById('mainSearchWrap');
 const mList = document.getElementById('membersList');
 const gList = document.getElementById('groupsMainList');
 const mTitle = document.getElementById('mainListTitle');
+const mSortBar = document.getElementById('mainMembersSortBar');
 const isMobile = window.matchMedia('(max-width: 700px)').matches;
 // On mobile use a direct swap so the panel height recalculates immediately;
 // this prevents the groups list from being clipped or overlapping the page.
@@ -1853,12 +1912,14 @@ el.style.transform = 'none';
 });
 if(tab === 'members'){
 mSearch.style.display = 'block';
+if(mSortBar) mSortBar.style.display = 'flex';
 mTitle.textContent = 'قائمة الأعضاء';
 gList.style.display = 'none';
 mList.style.display = 'block';
 renderMembers();
 }else{
 mSearch.style.display = 'none';
+if(mSortBar) mSortBar.style.display = 'none';
 mTitle.textContent = 'قائمة المجموعات';
 mList.style.display = 'none';
 gList.style.display = 'block';
@@ -1870,10 +1931,12 @@ return;
 }
 if(tab === 'members') {
 mSearch.style.display = 'block';
+if(mSortBar) mSortBar.style.display = 'flex';
 mTitle.textContent = 'قائمة الأعضاء';
 crossfadeSwitch(gList, mList, renderMembers);
 } else {
 mSearch.style.display = 'none';
+if(mSortBar) mSortBar.style.display = 'none';
 mTitle.textContent = 'قائمة المجموعات';
 crossfadeSwitch(mList, gList, renderMainGroups);
 }
@@ -1982,7 +2045,13 @@ container.innerHTML = '<div class="empty-state">لا يوجد أعضاء مضا�
 return;
 }
 let html = '';
-members.forEach(m => {
+const sortedMembers = members.slice();
+if(mainMemberSortMode === 'name'){
+  sortedMembers.sort((a,b) => String(a.name||'').localeCompare(String(b.name||''), 'ar'));
+}else if(mainMemberSortMode === 'points'){
+  sortedMembers.sort((a,b) => (Number(b.points)||0) - (Number(a.points)||0));
+}
+sortedMembers.forEach(m => {
 const grp = groups.find(g => Number(g.id) === Number(m.groupId));
 const groupHtml = grp
   ? `<div class="member-group-row"><span class="group-badge">${esc(grp.name)}</span></div>`
@@ -2011,13 +2080,24 @@ ${hasPerm('remove_points') ? `<button class="action-btn btn-minus btn-press" onc
 });
 container.innerHTML = html;
 }
+// ===== SORT: MAIN MEMBERS LIST =====
+function setMainMemberSort(mode){
+  mainMemberSortMode = (mainMemberSortMode === mode) ? 'none' : mode;
+  const nameBtn = document.getElementById('mainSortNameBtn');
+  const pointsBtn = document.getElementById('mainSortPointsBtn');
+  if(nameBtn) nameBtn.classList.toggle('active', mainMemberSortMode === 'name');
+  if(pointsBtn) pointsBtn.classList.toggle('active', mainMemberSortMode === 'points');
+  renderMembers();
+}
 // ===== SEARCH MAIN MEMBERS =====
 function searchMainMembers() {
 const query = document.getElementById('mainMemberSearch').value.trim().toLowerCase();
 const resultsDiv = document.getElementById('mainSearchResults');
 const listDiv = document.getElementById('membersList');
-if(!query) { resultsDiv.innerHTML=''; listDiv.style.display='block'; return; }
+const sortBarDiv = document.getElementById('mainMembersSortBar');
+if(!query) { resultsDiv.innerHTML=''; listDiv.style.display='block'; if(sortBarDiv) sortBarDiv.style.display='flex'; return; }
 listDiv.style.display='none';
+if(sortBarDiv) sortBarDiv.style.display='none';
 const filtered = members.filter(m => String(m.name||'').toLowerCase().includes(query) || String(m.rank||'').toLowerCase().includes(query));
 if(filtered.length===0){ resultsDiv.innerHTML='<div class="empty-state">لا توجد نتائج مطابقة</div>'; return; }
 resultsDiv.innerHTML = filtered.map(m=>{
@@ -3074,5 +3154,639 @@ setupFirebase();
 initFirebase();
 });
 </script>
+<style id="user-requested-group-order-fix">
+/* Final group-detail layout + reliable scrolling */
+html,body{min-height:100%;overflow-x:hidden;overflow-y:auto;overscroll-behavior-y:auto}
+.screen{box-sizing:border-box!important;overflow-x:hidden!important;overflow-y:auto!important;touch-action:pan-y!important;-webkit-overflow-scrolling:touch!important;contain:none!important;min-height:100dvh!important;height:100dvh!important;padding-bottom:140px!important}
+.member-detail-screen{overflow-y:auto!important;contain:none!important;min-height:100dvh!important;height:100dvh!important}
+#groupDetailScreen{overflow-y:auto!important;overflow-x:hidden!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:20px!important;contain:none!important}
+#groupDetailMembersList{width:100%;max-width:700px;overflow:visible!important;flex:0 0 auto}
+
+/* Member row: edit/delete far right, name beside them, points beside left actions. */
+.group-detail-member-item{display:flex!important;flex-direction:row!important;direction:rtl!important;align-items:center!important;gap:12px!important;padding:16px 18px!important;min-width:0;cursor:grab!important;user-select:none}
+.group-detail-member-item:active{cursor:grabbing!important}
+.group-detail-member-item .group-member-manage{order:1;display:flex!important;align-items:center;gap:6px;min-width:max-content;flex:0 0 auto;direction:rtl}
+.group-detail-member-item .member-info{order:2;flex:1 1 auto;min-width:0;overflow:hidden;direction:rtl}
+.group-detail-member-item .member-points{order:3;flex:0 0 auto;min-width:86px;text-align:center;direction:rtl}
+.group-detail-member-item .member-actions{order:4;display:flex!important;align-items:center;justify-content:flex-start!important;gap:7px;min-width:max-content;flex:0 0 auto;direction:ltr}
+.group-member-edit-delete{display:flex;align-items:center;gap:6px;direction:rtl}
+.group-member-edit-delete .edit-x,.group-member-edit-delete .delete-x{margin:0!important;width:32px!important;height:32px!important;border-radius:9px!important;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.045);opacity:.9!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;transition:transform .18s ease,background .18s ease,border-color .18s ease!important}
+.group-member-edit-delete .edit-x{background:rgba(59,130,246,.09);border-color:rgba(59,130,246,.22)}
+.group-member-edit-delete .delete-x{background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.20)}
+.group-member-edit-delete .edit-x:hover{transform:translateY(-1px) scale(1.05)!important;background:rgba(59,130,246,.16)!important;border-color:rgba(59,130,246,.42)!important}
+.group-member-edit-delete .delete-x:hover{transform:translateY(-1px) scale(1.05)!important;background:rgba(239,68,68,.14)!important;border-color:rgba(239,68,68,.40)!important}
+.group-member-edit-delete .edit-x svg{width:17px!important;height:17px!important;fill:#60a5fa!important}
+.group-member-edit-delete .delete-x svg{width:17px!important;height:17px!important;fill:#ef4444!important}
+
+/* Remove the old up/down controls completely. */
+.group-order-controls,.group-order-btn{display:none!important}
+.group-detail-member-item.group-member-dragging{opacity:.45;transform:scale(.99)}
+.group-detail-member-item.group-member-drag-over{background:rgba(217,119,6,.10)!important;box-shadow:inset 0 0 0 1px rgba(217,119,6,.35)}
+
+@media(max-width:700px){
+  #groupDetailScreen{padding:20px 10px 150px!important;gap:14px!important}
+  .group-detail-member-item{gap:7px!important;padding:13px 10px!important}
+  .group-detail-member-item .group-member-manage{gap:4px!important}
+  .group-member-edit-delete{gap:4px!important}
+  .group-member-edit-delete .edit-x,.group-member-edit-delete .delete-x{width:30px!important;height:30px!important;border-radius:8px!important}
+  .group-member-edit-delete .edit-x svg,.group-member-edit-delete .delete-x svg{width:15px!important;height:15px!important}
+  .group-detail-member-item .member-points{min-width:72px!important;padding:6px 7px!important;font-size:.8rem!important}
+  .group-detail-member-item .member-actions{gap:5px!important}
+  .group-detail-member-item .member-actions .action-btn{width:34px!important;height:34px!important}
+}
+</style>><script id="user-requested-group-order-js">
+/* Re-render the group detail list with ordering controls and drag/drop. */
+window.renderGroupDetail = function(groupId) {
+  const g = groups.find(x => Number(x.id) === Number(groupId));
+  if(!g) return;
+  const title = document.getElementById('groupDetailTitle');
+  const points = document.getElementById('groupDetailPoints');
+  if(title) title.textContent = g.name;
+  if(points) points.textContent = `${Number(g.points)||0} نقطة للمجموعة`;
+
+  const quickActions = document.getElementById('groupQuickActions');
+  if(quickActions){
+    let q='';
+    if(hasPerm('add_points')) q += `<button class="submit-btn btn-press" style="flex:1;background:linear-gradient(135deg,#16a34a,#22c55e);margin-top:0" onclick="openGroupModal('groupPlus',${g.id})">إضافة نقاط للمجموعة</button>`;
+    if(hasPerm('remove_points')) q += `<button class="submit-btn btn-press" style="flex:1;background:linear-gradient(135deg,#dc2626,#ef4444);margin-top:0" onclick="openGroupModal('groupMinus',${g.id})">خصم نقاط من المجموعة</button>`;
+    q += `<button class="submit-btn btn-press" style="flex:1;background:linear-gradient(135deg,#2563eb,#3b82f6);margin-top:0" onclick="openGroupModal('groupNote',${g.id})">ملاحظة لكل المجموعة</button>`;
+    quickActions.innerHTML=q;
+  }
+
+  const sortManualBtn=document.getElementById('groupSortManualBtn');
+  const sortNameBtn=document.getElementById('groupSortNameBtn');
+  const sortPointsBtn=document.getElementById('groupSortPointsBtn');
+  if(sortManualBtn) sortManualBtn.classList.toggle('active', groupMemberSortMode === 'manual');
+  if(sortNameBtn) sortNameBtn.classList.toggle('active', groupMemberSortMode === 'name');
+  if(sortPointsBtn) sortPointsBtn.classList.toggle('active', groupMemberSortMode === 'points');
+
+  const container=document.getElementById('groupDetailMembersList');
+  if(!container) return;
+  const indexed=members.map((m,i)=>({m,i})).filter(x=>Number(x.m.groupId)===Number(groupId));
+  if(groupMemberSortMode === 'name'){
+    indexed.sort((a,b)=>String(a.m.name||'').localeCompare(String(b.m.name||''), 'ar'));
+  }else if(groupMemberSortMode === 'points'){
+    indexed.sort((a,b)=>(Number(b.m.points)||0) - (Number(a.m.points)||0));
+  }else{
+    indexed.sort((a,b)=>{
+      const ao=Number.isFinite(Number(a.m.groupOrder))?Number(a.m.groupOrder):a.i;
+      const bo=Number.isFinite(Number(b.m.groupOrder))?Number(b.m.groupOrder):b.i;
+      return ao-bo;
+    });
+  }
+  const groupMembers=indexed.map(x=>x.m);
+
+  if(!groupMembers.length){
+    container.innerHTML='<div class="empty-state">لا يوجد أعضاء في هذه المجموعة</div>';
+  }else{
+    let html='';
+    groupMembers.forEach((m,index)=>{
+      const edit=hasPerm('edit_members')?`<div class="edit-x" onclick="event.stopPropagation();openEditModal(${m.id})" title="تعديل"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c-.39-.39-1.02-.39-1.41 0l-2.34 2.34 3.75 3.75 2.34-2.34c.39-.39.39-1.02 0-1.41z"/></svg></div>`:'';
+      const del=hasPerm('remove_members')?`<div class="delete-x" onclick="event.stopPropagation();promptDeleteMember(${m.id})" title="حذف"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 10.59 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></div>`:'';
+      const arrows='';
+      html += `<div class="member-item group-detail-member-item" data-member-id="${m.id}" draggable="true" onclick="openMemberDetail(${m.id},'groupDetail')">
+        <div class="member-info"><div class="member-text"><div class="member-name"><span class="member-name-text">${esc(m.name)}</span><div class="member-name-icons" onclick="event.stopPropagation()">${edit}${del}</div></div><div class="member-rank">${esc(m.rank||'عضو')}</div></div></div>
+        <div class="member-points">${formatPoints(m.points)} نقطة</div>
+        <div class="member-actions" onclick="event.stopPropagation()">
+          ${hasPerm('add_points')?`<button class="action-btn btn-plus btn-press" onclick="openModal('plus',${m.id})" title="إضافة نقاط"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>`:''}
+          ${hasPerm('remove_points')?`<button class="action-btn btn-minus btn-press" onclick="openModal('minus',${m.id})" title="خصم نقاط"><svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg></button>`:''}
+          <button class="action-btn btn-notes btn-press" onclick="openModal('note',${m.id})" title="ملاحظة"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg></button>
+        </div></div>`;
+    });
+    container.innerHTML=html;
+    if(groupMemberSortMode === 'manual'){
+      setupGroupMemberOrdering(container,groupId);
+    }else{
+      container.querySelectorAll('.group-detail-member-item').forEach(el => el.setAttribute('draggable','false'));
+    }
+  }
+  filterGroupDetailLog(currentGroupDetailFilter);
+};
+// ===== SORT: GROUP DETAIL MEMBERS LIST =====
+function setGroupMemberSort(mode){
+  groupMemberSortMode = mode;
+  if(currentGroupDetailId) renderGroupDetail(currentGroupDetailId);
+}
+
+window.persistGroupMemberOrder = function(groupId,orderedIds){
+  const positions=new Map(orderedIds.map((id,i)=>[String(id),i]));
+  members.forEach(m=>{
+    if(Number(m.groupId)===Number(groupId) && positions.has(String(m.id))) m.groupOrder=positions.get(String(m.id));
+  });
+  saveAll();
+  renderMembers();
+  renderControlMembers();
+  renderGroupDetail(groupId);
+};
+
+window.moveGroupMember = function(groupId,memberId,direction){
+  const arr=members.map((m,i)=>({m,i})).filter(x=>Number(x.m.groupId)===Number(groupId));
+  arr.sort((a,b)=>{
+    const ao=Number.isFinite(Number(a.m.groupOrder))?Number(a.m.groupOrder):a.i;
+    const bo=Number.isFinite(Number(b.m.groupOrder))?Number(b.m.groupOrder):b.i;
+    return ao-bo;
+  });
+  const ids=arr.map(x=>x.m.id);
+  const from=ids.findIndex(id=>String(id)===String(memberId));
+  const to=from+Number(direction);
+  if(from<0||to<0||to>=ids.length) return;
+  [ids[from],ids[to]]=[ids[to],ids[from]];
+  persistGroupMemberOrder(groupId,ids);
+};
+
+window.setupGroupMemberOrdering = function(container,groupId){
+  let dragged=null;
+  container.querySelectorAll('.group-detail-member-item').forEach(row=>{
+    row.addEventListener('dragstart',e=>{
+      dragged=row.dataset.memberId;
+      row.classList.add('group-member-dragging');
+      if(e.dataTransfer){e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',dragged);}
+    });
+    row.addEventListener('dragover',e=>{e.preventDefault();row.classList.add('group-member-drag-over');if(e.dataTransfer)e.dataTransfer.dropEffect='move';});
+    row.addEventListener('dragleave',()=>row.classList.remove('group-member-drag-over'));
+    row.addEventListener('drop',e=>{
+      e.preventDefault();row.classList.remove('group-member-drag-over');
+      const source=dragged||e.dataTransfer?.getData('text/plain');
+      const target=row.dataset.memberId;
+      if(!source||String(source)===String(target))return;
+      const ids=[...container.querySelectorAll('.group-detail-member-item')].map(el=>el.dataset.memberId);
+      const from=ids.indexOf(String(source)),to=ids.indexOf(String(target));
+      if(from<0||to<0)return;
+      ids.splice(from,1);ids.splice(to,0,String(source));
+      persistGroupMemberOrder(groupId,ids);
+    });
+    row.addEventListener('dragend',()=>{dragged=null;container.querySelectorAll('.group-detail-member-item').forEach(el=>el.classList.remove('group-member-dragging','group-member-drag-over'));});
+  });
+};
+</script>
+<style id="final-group-detail-v3">
+/* Group detail: keep scrolling on the screen itself; never lock it through html/body. */
+html,body{height:100%!important;min-height:100%!important;overflow:hidden!important;overscroll-behavior:none!important}
+#groupDetailScreen{
+  position:fixed!important;inset:0!important;
+  width:100%!important;height:100dvh!important;min-height:100dvh!important;max-height:100dvh!important;
+  box-sizing:border-box!important;
+  overflow-x:hidden!important;overflow-y:auto!important;
+  -webkit-overflow-scrolling:touch!important;
+  overscroll-behavior-y:contain!important;
+  touch-action:pan-y!important;
+  contain:none!important;
+  padding:30px 16px 140px!important;
+}
+#groupDetailMembersList{width:100%!important;max-width:700px!important;overflow:visible!important}
+
+/* Exact member-list order: name/actions on the right, points in the middle, +/-/notes on the left. */
+#groupDetailMembersList .group-detail-member-item{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto auto!important;
+  align-items:center!important;
+  direction:rtl!important;
+  gap:14px!important;
+  padding:16px 18px!important;
+  min-width:0!important;
+  position:relative!important;
+  cursor:grab!important;
+  user-select:none!important;
+  touch-action:pan-y!important;
+  transition:background .25s ease,box-shadow .25s ease,transform .25s ease,opacity .25s ease!important;
+}
+#groupDetailMembersList .group-detail-member-item > .member-info{grid-column:1!important;min-width:0!important;display:flex!important;flex-direction:row-reverse!important;gap:12px!important}
+#groupDetailMembersList .group-detail-member-item > .member-points{grid-column:2!important;justify-self:center!important;min-width:86px!important;text-align:center!important}
+#groupDetailMembersList .group-detail-member-item > .member-actions{grid-column:3!important;justify-content:flex-end!important;min-width:max-content!important;direction:ltr!important;display:flex!important;align-items:center!important;gap:6px!important}
+#groupDetailMembersList .group-detail-member-item .group-member-manage{display:none!important}
+
+/* Put edit + X beside the member name, matching the normal members list. */
+#groupDetailMembersList .group-detail-member-item .member-name{justify-content:space-between!important;width:100%!important;gap:8px!important}
+#groupDetailMembersList .group-detail-member-item .member-name-icons{display:flex!important;align-items:center!important;gap:5px!important;flex-shrink:0!important;order:2!important}
+#groupDetailMembersList .group-detail-member-item .member-name-text{order:1!important;min-width:0!important;flex:1!important;text-align:right!important}
+#groupDetailMembersList .group-detail-member-item .edit-x,
+#groupDetailMembersList .group-detail-member-item .delete-x{
+  width:30px!important;height:30px!important;border-radius:9px!important;
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  opacity:.92!important;transition:transform .2s cubic-bezier(.22,1,.36,1),background .2s ease,border-color .2s ease,box-shadow .2s ease!important;
+}
+#groupDetailMembersList .group-detail-member-item .edit-x{
+  background:rgba(59,130,246,.10)!important;border:1px solid rgba(59,130,246,.28)!important;
+}
+#groupDetailMembersList .group-detail-member-item .delete-x{
+  background:rgba(239,68,68,.08)!important;border:1px solid rgba(239,68,68,.22)!important;
+}
+#groupDetailMembersList .group-detail-member-item .edit-x svg{
+  width:16px!important;height:16px!important;fill:#60a5fa!important;
+  transform:rotate(-8deg)!important;transition:transform .2s ease!important;
+}
+#groupDetailMembersList .group-detail-member-item .delete-x svg{width:15px!important;height:15px!important;fill:#ef4444!important}
+#groupDetailMembersList .group-detail-member-item .edit-x:hover{transform:translateY(-1px) scale(1.07)!important;background:rgba(59,130,246,.18)!important;box-shadow:0 5px 14px rgba(59,130,246,.16)!important}
+#groupDetailMembersList .group-detail-member-item .edit-x:hover svg{transform:rotate(0deg) scale(1.05)!important}
+#groupDetailMembersList .group-detail-member-item .delete-x:hover{transform:translateY(-1px) scale(1.07)!important;background:rgba(239,68,68,.15)!important}
+
+/* Drag/reorder animation. */
+#groupDetailMembersList .group-detail-member-item.group-member-dragging{
+  opacity:.58!important;transform:scale(.985)!important;z-index:3!important;
+  box-shadow:0 12px 28px rgba(0,0,0,.24),inset 0 0 0 1px rgba(251,191,36,.18)!important;
+}
+#groupDetailMembersList .group-detail-member-item.group-member-drag-over{
+  background:rgba(217,119,6,.12)!important;
+  box-shadow:inset 0 0 0 1px rgba(251,191,36,.45),0 7px 20px rgba(217,119,6,.10)!important;
+  transform:translateY(-2px)!important;
+}
+#groupDetailMembersList .group-detail-member-item.group-member-reordered{
+  animation:groupMemberLift .46s cubic-bezier(.22,1,.36,1) both!important;
+}
+@keyframes groupMemberLift{
+  0%{opacity:.45;transform:translateY(12px) scale(.985)}
+  55%{opacity:1;transform:translateY(-4px) scale(1.012)}
+  100%{opacity:1;transform:translateY(0) scale(1)}
+}
+@media(max-width:700px){
+  #groupDetailScreen{padding:20px 10px 150px!important}
+  #groupDetailMembersList .group-detail-member-item{grid-template-columns:minmax(0,1fr) auto!important;gap:10px 12px!important;padding:13px 10px!important}
+  #groupDetailMembersList .group-detail-member-item > .member-info{grid-column:1!important}
+  #groupDetailMembersList .group-detail-member-item > .member-points{grid-column:2!important;min-width:72px!important;padding:6px 7px!important;font-size:.8rem!important}
+  #groupDetailMembersList .group-detail-member-item > .member-actions{grid-column:1 / -1!important;justify-content:flex-start!important}
+  #groupDetailMembersList .group-detail-member-item .edit-x,#groupDetailMembersList .group-detail-member-item .delete-x{width:30px!important;height:30px!important}
+}
+</style>
+<script id="final-group-detail-v3-js">
+(function(){
+  const oldPersist = window.persistGroupMemberOrder;
+  window.persistGroupMemberOrder = function(groupId, orderedIds){
+    const positions = new Map(orderedIds.map((id,i)=>[String(id),i]));
+    members.forEach(m=>{
+      if(Number(m.groupId)===Number(groupId) && positions.has(String(m.id))) m.groupOrder=positions.get(String(m.id));
+    });
+    saveAll();
+    renderMembers();
+    renderControlMembers();
+    renderGroupDetail(groupId);
+    requestAnimationFrame(()=>{
+      const list=document.getElementById('groupDetailMembersList');
+      if(!list) return;
+      list.querySelectorAll('.group-detail-member-item').forEach((el,i)=>{
+        el.style.animationDelay=(i*28)+'ms';
+        el.classList.remove('group-member-reordered');
+        void el.offsetWidth;
+        el.classList.add('group-member-reordered');
+        setTimeout(()=>el.classList.remove('group-member-reordered'),520+i*28);
+      });
+    });
+  };
+
+  const oldSetup = window.setupGroupMemberOrdering;
+  window.setupGroupMemberOrdering = function(container,groupId){
+    if(!container) return;
+    let dragged=null;
+    container.querySelectorAll('.group-detail-member-item').forEach(row=>{
+      row.addEventListener('dragstart',e=>{
+        dragged=row.dataset.memberId;
+        row.classList.add('group-member-dragging');
+        if(e.dataTransfer){e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',dragged);}
+      });
+      row.addEventListener('dragover',e=>{
+        e.preventDefault();
+        if(!dragged || String(dragged)===String(row.dataset.memberId)) return;
+        row.classList.add('group-member-drag-over');
+        if(e.dataTransfer)e.dataTransfer.dropEffect='move';
+      });
+      row.addEventListener('dragleave',()=>row.classList.remove('group-member-drag-over'));
+      row.addEventListener('drop',e=>{
+        e.preventDefault();
+        row.classList.remove('group-member-drag-over');
+        const source=dragged||e.dataTransfer?.getData('text/plain');
+        const target=row.dataset.memberId;
+        if(!source||String(source)===String(target)) return;
+        const ids=[...container.querySelectorAll('.group-detail-member-item')].map(el=>el.dataset.memberId);
+        const from=ids.indexOf(String(source)), to=ids.indexOf(String(target));
+        if(from<0||to<0) return;
+        ids.splice(from,1);ids.splice(to,0,String(source));
+        window.persistGroupMemberOrder(groupId,ids);
+      });
+      row.addEventListener('dragend',()=>{
+        dragged=null;
+        container.querySelectorAll('.group-detail-member-item').forEach(el=>el.classList.remove('group-member-dragging','group-member-drag-over'));
+      });
+    });
+  };
+})();
+</script>
+
+
+<style id="final-clean-group-detail-fix">
+/* FINAL CLEANUP: group detail must scroll as a real page, not a locked flex viewport. */
+html, body {
+  width:100%;
+  min-height:100%;
+  overflow:hidden !important;
+  overscroll-behavior:none !important;
+}
+#groupDetailScreen {
+  position:absolute !important;
+  top:0 !important;
+  left:0 !important;
+  right:0 !important;
+  width:100% !important;
+  height:100dvh !important;
+  min-height:100dvh !important;
+  max-height:none !important;
+  box-sizing:border-box !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+  overscroll-behavior-y:auto !important;
+  touch-action:pan-y !important;
+  contain:none !important;
+  padding:30px 16px 180px !important;
+  transform:translateX(0) !important;
+  will-change:auto !important;
+}
+#groupDetailScreen:not(.active){
+  pointer-events:none !important;
+}
+#groupDetailScreen > * { flex:0 0 auto !important; min-height:0; }
+#groupDetailMembersList {
+  width:100% !important;
+  max-width:700px !important;
+  height:auto !important;
+  max-height:none !important;
+  overflow:visible !important;
+  flex:0 0 auto !important;
+}
+
+/* Remove the member/avatar icon only inside the group member list. */
+#groupDetailMembersList .member-avatar,
+#groupDetailMembersList .src-avatar { display:none !important; }
+
+/* EXACT same three-part structure as the normal members list:
+   name right -> points -> +/-/notes left. */
+#groupDetailMembersList .group-detail-member-item {
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) auto auto !important;
+  grid-template-areas:"info points actions" !important;
+  direction:rtl !important;
+  align-items:center !important;
+  gap:14px !important;
+  padding:16px 18px !important;
+  min-width:0 !important;
+  position:relative !important;
+  cursor:grab !important;
+  user-select:none !important;
+  touch-action:pan-y !important;
+  transition:background .22s ease, box-shadow .22s ease, transform .28s cubic-bezier(.22,1,.36,1), opacity .22s ease !important;
+}
+#groupDetailMembersList .group-detail-member-item > .member-info {
+  grid-area:info !important;
+  min-width:0 !important;
+  width:100% !important;
+  display:flex !important;
+  flex-direction:row-reverse !important;
+  gap:12px !important;
+  overflow:hidden !important;
+}
+#groupDetailMembersList .group-detail-member-item > .member-points {
+  grid-area:points !important;
+  justify-self:center !important;
+  min-width:86px !important;
+  text-align:center !important;
+}
+#groupDetailMembersList .group-detail-member-item > .member-actions {
+  grid-area:actions !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:flex-end !important;
+  gap:6px !important;
+  min-width:max-content !important;
+  flex:0 0 auto !important;
+  direction:rtl !important; /* same visual order as normal members: note, minus, plus */
+  flex-wrap:nowrap !important;
+}
+
+/* Name is right; edit + X sit immediately to its LEFT, with no huge spacer. */
+#groupDetailMembersList .group-detail-member-item .member-text {
+  min-width:0 !important;
+  width:100% !important;
+  flex:1 1 auto !important;
+}
+#groupDetailMembersList .group-detail-member-item .member-name {
+  width:auto !important;
+  max-width:100% !important;
+  display:flex !important;
+  flex-direction:row !important;
+  direction:rtl !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  gap:7px !important;
+}
+#groupDetailMembersList .group-detail-member-item .member-name-text {
+  order:1 !important;
+  flex:0 1 auto !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  text-align:right !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+#groupDetailMembersList .group-detail-member-item .member-name-icons {
+  order:2 !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:4px !important;
+  flex:0 0 auto !important;
+  margin:0 !important;
+}
+#groupDetailMembersList .group-detail-member-item .edit-x,
+#groupDetailMembersList .group-detail-member-item .delete-x {
+  width:28px !important;
+  height:28px !important;
+  border-radius:8px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  opacity:1 !important;
+  box-sizing:border-box !important;
+  transition:transform .18s cubic-bezier(.22,1,.36,1), background .18s ease, box-shadow .18s ease !important;
+}
+#groupDetailMembersList .group-detail-member-item .edit-x {
+  background:rgba(59,130,246,.10) !important;
+  border:1px solid rgba(59,130,246,.30) !important;
+}
+#groupDetailMembersList .group-detail-member-item .delete-x {
+  background:rgba(239,68,68,.08) !important;
+  border:1px solid rgba(239,68,68,.25) !important;
+}
+#groupDetailMembersList .group-detail-member-item .edit-x svg {
+  width:15px !important;
+  height:15px !important;
+  fill:#60a5fa !important;
+  transform:none !important;
+}
+#groupDetailMembersList .group-detail-member-item .delete-x svg {
+  width:15px !important;
+  height:15px !important;
+  fill:#ef4444 !important;
+}
+#groupDetailMembersList .group-detail-member-item .edit-x:hover,
+#groupDetailMembersList .group-detail-member-item .delete-x:hover {
+  transform:scale(1.08) !important;
+}
+
+/* Point log filters use the exact same RTL visual order as the member actions. */
+#groupDetailScreen .group-detail-actions {
+  direction:rtl !important;
+  display:grid !important;
+  grid-template-columns:repeat(3,1fr) !important;
+  width:100% !important;
+  max-width:700px !important;
+}
+#groupDetailScreen .group-detail-actions > #groupBtnFilterPlus { grid-column:1 !important; }
+#groupDetailScreen .group-detail-actions > #groupBtnFilterMinus { grid-column:2 !important; }
+#groupDetailScreen .group-detail-actions > #groupBtnFilterNote { grid-column:3 !important; }
+
+/* Reorder feedback: lift the dragged row and animate the list after drop. */
+#groupDetailMembersList .group-detail-member-item.group-member-dragging {
+  opacity:.55 !important;
+  transform:scale(.985) !important;
+  z-index:5 !important;
+  box-shadow:0 14px 32px rgba(0,0,0,.28), inset 0 0 0 1px rgba(251,191,36,.25) !important;
+}
+#groupDetailMembersList .group-detail-member-item.group-member-drag-over {
+  background:rgba(217,119,6,.12) !important;
+  box-shadow:inset 0 0 0 1px rgba(251,191,36,.45),0 6px 18px rgba(217,119,6,.10) !important;
+  transform:translateY(-3px) !important;
+}
+#groupDetailMembersList .group-detail-member-item.group-member-reordered {
+  animation:groupMemberReorderFinal .5s cubic-bezier(.22,1,.36,1) both !important;
+}
+@keyframes groupMemberReorderFinal {
+  0%{opacity:.35;transform:translateY(14px) scale(.985)}
+  55%{opacity:1;transform:translateY(-5px) scale(1.012)}
+  100%{opacity:1;transform:translateY(0) scale(1)}
+}
+
+@media(max-width:700px){
+  #groupDetailScreen {
+    height:100dvh !important;
+    min-height:100dvh !important;
+    padding:20px 10px 180px !important;
+    gap:14px !important;
+  }
+  #groupDetailMembersList .group-detail-member-item {
+    grid-template-columns:minmax(0,1fr) auto auto !important;
+    grid-template-areas:"info points actions" !important;
+    gap:8px !important;
+    padding:13px 10px !important;
+  }
+  #groupDetailMembersList .group-detail-member-item > .member-info { grid-area:info !important; }
+  #groupDetailMembersList .group-detail-member-item > .member-points {
+    grid-area:points !important;
+    min-width:72px !important;
+    padding:3px 8px !important;
+    font-size:.82rem !important;
+  }
+  #groupDetailMembersList .group-detail-member-item > .member-actions {
+    grid-area:actions !important;
+    gap:5px !important;
+  }
+  #groupDetailMembersList .group-detail-member-item .action-btn {
+    width:34px !important;
+    height:34px !important;
+  }
+  #groupDetailMembersList .group-detail-member-item .member-name { gap:5px !important; }
+  #groupDetailMembersList .group-detail-member-item .edit-x,
+  #groupDetailMembersList .group-detail-member-item .delete-x {
+    width:27px !important;
+    height:27px !important;
+    border-radius:7px !important;
+  }
+  #groupDetailMembersList .group-detail-member-item .edit-x svg,
+  #groupDetailMembersList .group-detail-member-item .delete-x svg {
+    width:14px !important;
+    height:14px !important;
+  }
+  #groupDetailScreen .group-detail-actions {
+    grid-template-columns:repeat(3,1fr) !important;
+  }
+}
+</style>
 </body>
 </html>
+<style id="final-member-profile-layout-fix">
+/* Final: member detail name flush right, points flush left */
+#memberDetailScreen #memberProfileCard,
+#memberProfileCard.member-profile-card {
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) auto !important;
+  grid-template-areas:"info points" !important;
+  direction:rtl !important;
+  align-items:center !important;
+  width:100% !important;
+  box-sizing:border-box !important;
+}
+#memberProfileCard .member-profile-info {
+  grid-area:info !important;
+  order:initial !important;
+  justify-self:start !important;
+  align-items:flex-end !important;
+  text-align:right !important;
+  min-width:0 !important;
+  width:100% !important;
+}
+#memberProfileCard .member-profile-name,
+#memberProfileCard .member-profile-rank {
+  text-align:right !important;
+  direction:rtl !important;
+  width:100% !important;
+}
+#memberProfileCard .member-profile-points {
+  grid-area:points !important;
+  order:initial !important;
+  justify-self:end !important;
+  margin:0 !important;
+  white-space:nowrap !important;
+}
+@media(max-width:700px){
+  #memberDetailScreen #memberProfileCard,
+  #memberProfileCard.member-profile-card {
+    grid-template-columns:minmax(0,1fr) auto !important;
+    grid-template-areas:"info points" !important;
+  }
+}
+</style>
+<style id="final-scroll-consolidated-fix">
+/* Single scroll container per screen: html/body are locked, each .screen owns its own scroll. */
+html,body{
+  height:100% !important;
+  min-height:100% !important;
+  overflow:hidden !important;
+  overscroll-behavior:none !important;
+}
+body{position:fixed !important;inset:0 !important;width:100% !important;}
+.screen{
+  position:absolute !important;
+  inset:0 !important;
+  height:100dvh !important;
+  max-height:100dvh !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  -webkit-overflow-scrolling:touch !important;
+  overscroll-behavior-y:contain !important;
+  touch-action:pan-y !important;
+}
+#groupDetailScreen,#memberDetailScreen{
+  height:100dvh !important;
+  max-height:100dvh !important;
+  overflow-y:auto !important;
+  padding-bottom:160px !important;
+}
+/* Nested lists must never trap their own scroll; only the log lists keep an internal scroll area. */
+#groupDetailMembersList,#membersList,#groupsMainList,.members-list{
+  overflow:visible !important;
+  max-height:none !important;
+  height:auto !important;
+}
+.detail-log-list{overflow-y:auto !important;max-height:400px !important;-webkit-overflow-scrolling:touch !important;}
+</style>
