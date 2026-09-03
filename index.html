@@ -646,6 +646,34 @@ touch-action:pan-y;
   #mainMembersSortBar span,#groupMembersSortBar span{font-size:.72rem}
 }
 </style>
+
+<style id="final-log-mobile-fix">
+.log-item,.log-item-with-delete{align-items:flex-start!important}
+.log-item-with-delete .log-left{min-width:0!important;flex:1 1 100%!important;align-items:flex-start!important}
+.log-item-with-delete .log-left>div{
+  min-width:0!important;overflow:visible!important;text-overflow:clip!important;
+  white-space:normal!important;overflow-wrap:anywhere!important;
+  word-break:normal!important;line-height:1.7!important
+}
+.log-time{flex:0 0 auto!important;white-space:normal!important;line-height:1.5!important}
+@media(max-width:700px){
+  .log-section,.detail-log-section,.group-detail-log-section{width:100%!important;max-width:100%!important}
+  .log-list,.detail-log-list,.group-detail-log-list{width:100%!important;overflow:visible!important}
+  .log-item,.log-item-with-delete{
+    padding:10px 12px!important;gap:7px!important;
+    flex-direction:column!important;align-items:stretch!important
+  }
+  .log-item-with-delete .log-left{
+    width:100%!important;display:flex!important;align-items:flex-start!important;gap:7px!important
+  }
+  .log-item-with-delete .log-left>div{
+    width:100%!important;max-width:none!important;white-space:normal!important;
+    overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere!important
+  }
+  .log-time{align-self:flex-start!important;font-size:.7rem!important}
+}
+</style>
+
 </head>
 <body>
 <script>
@@ -1144,6 +1172,10 @@ else currentUser = null;
 }
 // ===== HELPER FUNCTIONS =====
 function formatPoints(value) { const n = Number(value); return Number.isFinite(n) ? n : 0; }
+function createLogId() {
+  return Date.now() + Math.random();
+}
+
 function esc(str) {
 if (!str) return '';
 return String(str).replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"');
@@ -1438,6 +1470,16 @@ function mergeAssistants(localItems, remoteItems) {
   return Object.values(out);
 }
 
+function mergeLogs(localLogs, remoteLogs) {
+  // Logs are append-only. Never infer deletion from a missing local log.
+  const byId = new Map();
+  [...(remoteLogs || []), ...(localLogs || [])].forEach(log => {
+    if(!log || log.id == null) return;
+    byId.set(String(log.id), deepClone(log));
+  });
+  return Array.from(byId.values()).sort((a,b) => Number(b.id || 0) - Number(a.id || 0));
+}
+
 function mergeState(localState, baseState, remoteState) {
   const local = normalizeRemoteState(localState);
   const base = normalizeRemoteState(baseState);
@@ -1447,7 +1489,7 @@ function mergeState(localState, baseState, remoteState) {
     members: mergeCollection(local.members, base.members, remote.members, {pointDelta:true}),
     groups: mergeCollection(local.groups, base.groups, remote.groups, {pointDelta:true}),
     assistants: mergeAssistants(local.assistants, remote.assistants),
-    logs: mergeCollection(local.logs, base.logs)
+    logs: mergeLogs(local.logs, remote.logs)
   };
 }
 
@@ -2268,7 +2310,7 @@ groupId: grpVal ? Number(grpVal) : null
 };
 members.push(newMem);
 logs.unshift({
-id: Date.now(),
+id: createLogId(),
 action: 'إضافة عضو جديد',
 memberName: name,
 details: rank || 'عضو',
@@ -2295,7 +2337,7 @@ if(!m) return;
 confirmCallback = function() {
 members = members.filter(x => x.id !== id);
 logs.unshift({
-id: Date.now(),
+id: createLogId(),
 action: 'حذف عضو',
 memberName: m.name,
 details: 'تم الحذف',
@@ -2351,7 +2393,7 @@ m.name = name;
 m.rank = rank;
 m.groupId = grpVal ? Number(grpVal) : null;
 logs.unshift({
-id: Date.now(),
+id: createLogId(),
 action: 'تعديل بيانات العضو',
 memberName: name,
 details: 'تم التعديل بواسطة الإدارة',
@@ -2533,7 +2575,7 @@ const amount = parseInt(document.getElementById('modalAmount').value, 10);
 if(isNaN(amount) || amount <= 0) { showToast('يرجى ادخال عدد نقاط صحيح'); return; }
 g.points += amount;
 logs.unshift({
-id: Date.now() + Math.random(),
+id: createLogId(),
 action: `إضافة ${amount} نقاط للمجموعة`,
 memberName: g.name,
 details: reason || 'بدون سبب',
@@ -2550,7 +2592,7 @@ if(isNaN(amount) || amount <= 0) { showToast('يرجى ادخال عدد نقا�
 const actual = Math.min(g.points, amount);
 g.points -= actual;
 logs.unshift({
-id: Date.now() + Math.random(),
+id: createLogId(),
 action: `خصم ${actual} نقاط من المجموعة`,
 memberName: g.name,
 details: reason || 'بدون سبب',
@@ -2563,7 +2605,7 @@ showToast(`تم خصم ${actual} نقطة من المجموعة "${g.name}"`, 's
 } else if(currentModalType === 'groupNote') {
 if(!reason) { showToast('يرجى كتابة الملاحظة'); return; }
 logs.unshift({
-id: Date.now() + Math.random(),
+id: createLogId(),
 action: 'ملاحظة للمجموعة',
 memberName: g.name,
 details: reason,
@@ -2827,7 +2869,7 @@ container.innerHTML = '<div class="empty-state">لا يوجد سجل أحداث<
 return;
 }
 let html = '';
-logs.forEach(l => {
+[...logs].sort((a,b) => Number(b.id || 0) - Number(a.id || 0)).forEach(l => {
 html += `
 <div class="log-item-with-delete">
 <div class="log-left">
@@ -3072,7 +3114,7 @@ if(isNaN(amount) || amount <= 0) { showToast('يرجى ادخال عدد نقا�
 
 m.points = formatPoints(m.points) + amount;
 logs.unshift({
-  id: Date.now(),
+  id: createLogId(),
   action: `إضافة ${amount} نقاط`,
   memberName: m.name,
   details: reason || 'بدون سبب',
@@ -3089,7 +3131,7 @@ if(isNaN(amount) || amount <= 0) { showToast('يرجى ادخال عدد نقا�
 
 m.points = Math.max(0, formatPoints(m.points) - amount);
 logs.unshift({
-  id: Date.now(),
+  id: createLogId(),
   action: `خصم ${amount} نقاط`,
   memberName: m.name,
   details: reason || 'بدون سبب',
@@ -3103,7 +3145,7 @@ showToast(`تم خصم ${amount} نقاط من ${m.name}`, 'success');
 if(!reason) { showToast('يرجى كتابة الملاحظة'); return; }
 
 logs.unshift({
-  id: Date.now(),
+  id: createLogId(),
   action: 'ملاحظة',
   memberName: m.name,
   details: reason,
@@ -3194,7 +3236,7 @@ html,body{min-height:100%;overflow-x:hidden;overflow-y:auto;overscroll-behavior-
   .group-detail-member-item .member-actions{gap:5px!important}
   .group-detail-member-item .member-actions .action-btn{width:34px!important;height:34px!important}
 }
-</style>><script id="user-requested-group-order-js">
+</style><script id="user-requested-group-order-js">
 /* Re-render the group detail list with ordering controls and drag/drop. */
 window.renderGroupDetail = function(groupId) {
   const g = groups.find(x => Number(x.id) === Number(groupId));
