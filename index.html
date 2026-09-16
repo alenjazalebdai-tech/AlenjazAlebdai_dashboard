@@ -270,6 +270,8 @@ button:focus,a:focus,.btn-press:focus{outline:none}
 .log-item-with-delete .log-left > div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .log-item-with-delete .log-delete-btn{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,.28);background:rgba(239,68,68,.12);color:#ef4444;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s ease;flex-shrink:0;margin:0;padding:0;z-index:2}
 .log-item-with-delete .log-delete-btn:hover{background:rgba(239,68,68,.28);border-color:rgba(239,68,68,.55);transform:translateY(-50%) scale(1.08)}
+.log-item-with-delete .log-delete-btn:hover svg{transform:rotate(-12deg)}
+.log-item-with-delete .log-delete-btn svg{width:15px;height:15px;fill:currentColor;transition:transform .18s ease}
 .log-item-with-delete .log-delete-btn:active{transform:translateY(-50%) scale(.94)}
 .log-item-with-delete .log-delete-btn svg{width:15px;height:15px;fill:currentColor}
 @media (hover:none){.log-item-with-delete{touch-action:auto;-webkit-user-select:auto;user-select:auto}}
@@ -284,7 +286,7 @@ button:focus,a:focus,.btn-press:focus{outline:none}
 .confirm-modal.info .confirm-btn-delete{background:linear-gradient(135deg,#2563eb,#3b82f6);box-shadow:0 8px 24px rgba(37,99,235,.35)}
 .confirm-modal.info .confirm-btn-delete:hover{background:linear-gradient(135deg,#3b82f6,#60a5fa);box-shadow:0 12px 32px rgba(37,99,235,.45)}
 .btn-press{transition:transform 0.15s cubic-bezier(.34,1.56,.64,1),box-shadow 0.15s ease}
-.btn-press:active{transform:scale(0.92)!important}
+.btn-press:active{transform:none!important}
 .list-item{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:12px;margin-bottom:8px;cursor:pointer;transition:all .2s ease;flex-wrap:wrap;gap:8px}
 .list-item:hover{background:rgba(255,255,255,.05);border-color:rgba(217,119,6,.2)}
 .list-item-info{display:flex;flex-direction:column;gap:2px;align-items:flex-end;flex:1;min-width:120px}
@@ -682,10 +684,45 @@ touch-action:pan-y;
 #groupDetailScreen .group-header-quick-actions .action-btn{display:inline-flex!important;visibility:visible!important;opacity:1!important;flex:0 0 auto!important;width:40px!important;height:40px!important}
 @media(max-width:700px){#groupDetailScreen .group-header-quick-actions .action-btn{width:36px!important;height:36px!important}}
 </style>
+<style id="point-limit-warning-v45">
+.point-limit-warning{display:none;align-items:center;gap:9px;margin:8px 0 10px;padding:10px 13px;border:1px solid rgba(245,158,11,.55);background:rgba(245,158,11,.12);color:#f59e0b;border-radius:10px;font-size:.86rem;font-weight:800;transform-origin:center;box-shadow:0 0 0 rgba(245,158,11,0)}
+.point-limit-warning.show{display:flex;animation:pointLimitWarningIn .42s cubic-bezier(.2,.9,.25,1.35),pointLimitWarningGlow 1.8s ease-in-out .35s infinite}
+.point-warning-icon{display:inline-flex;align-items:center;justify-content:center;font-size:18px;line-height:1;flex:0 0 auto;animation:pointWarningIcon .55s cubic-bezier(.36,.07,.19,.97) .08s both}
+.point-warning-text{animation:pointWarningText .38s ease-out both}
+@keyframes pointLimitWarningIn{0%{opacity:0;transform:translateY(-10px) scale(.88)}65%{opacity:1;transform:translateY(2px) scale(1.025)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes pointLimitWarningGlow{0%,100%{box-shadow:0 0 0 rgba(245,158,11,0);transform:scale(1)}50%{box-shadow:0 0 18px rgba(245,158,11,.16);transform:scale(1.008)}}
+@keyframes pointWarningIcon{0%{opacity:0;transform:rotate(-18deg) scale(.5)}55%{opacity:1;transform:rotate(8deg) scale(1.12)}100%{opacity:1;transform:rotate(0) scale(1)}}
+@keyframes pointWarningText{0%{opacity:0;transform:translateX(8px)}100%{opacity:1;transform:translateX(0)}}
+@media (prefers-reduced-motion:reduce){.point-limit-warning.show,.point-warning-icon,.point-warning-text{animation:none}}
+.point-warning-icon{font-size:18px;line-height:1;flex:0 0 auto}
+.point-warning-text{color:#f59e0b}
+</style>
+<style id="point-options-v39">
+.point-options-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 8px}.point-option-btn{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);color:inherit;border-radius:12px;padding:11px 10px;text-align:right;cursor:pointer;transition:.18s ease;min-height:64px}.point-option-btn:hover{background:rgba(255,255,255,.07)}.point-option-btn.active{border-color:rgba(212,184,150,.65);background:rgba(212,184,150,.10);box-shadow:0 0 0 1px rgba(212,184,150,.12) inset}.point-option-label{display:block;font-weight:700;font-size:.88rem;line-height:1.35;color:#fff}.point-option-limit{display:block;margin-top:5px;font-size:.76rem;opacity:.65}.point-limit-text{font-size:.78rem;opacity:.7;margin:-2px 0 7px}@media(max-width:560px){.point-options-grid{grid-template-columns:1fr}.point-option-btn{min-height:58px}}
+
+.point-option-label{color:#fff!important}.point-limit-text{color:#fff}.point-limit-text[style*="color"]{font-weight:700}
+<style id="point-input-clean-v40">
+#modalAmount::-webkit-inner-spin-button,#modalAmount::-webkit-outer-spin-button{display:none;-webkit-appearance:none;margin:0}
+#modalAmount{-moz-appearance:textfield;appearance:textfield}
+.point-limit-text{display:none!important}
+</style>
+</style>
+<style id="dashboard-stats-style">
+.dashboard-stats{width:100%;max-width:700px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 2px;}
+.dashboard-stat{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 18px;background:linear-gradient(135deg,rgba(255,255,255,.055),rgba(255,255,255,.025));border:1px solid rgba(255,255,255,.09);border-radius:16px;box-shadow:0 12px 30px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.06);backdrop-filter:blur(20px);}
+.dashboard-stat::after{content:'';position:absolute;width:70px;height:70px;border-radius:50%;right:-24px;top:-28px;background:rgba(251,191,36,.08);filter:blur(2px);pointer-events:none;}
+.dashboard-stat-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.18);color:#fbbf24;flex-shrink:0;}
+.dashboard-stat-icon svg{width:21px;height:21px;fill:currentColor;}
+.dashboard-stat-info{display:flex;flex-direction:column;align-items:flex-end;gap:1px;min-width:0;}
+.dashboard-stat-label{font-size:.76rem;color:rgba(212,184,150,.65);font-weight:500;}
+.dashboard-stat-value{font-size:1.35rem;line-height:1.1;color:#fff;font-weight:700;}
+@media(max-width:480px){.dashboard-stats{gap:8px}.dashboard-stat{padding:12px 13px;border-radius:14px;gap:8px}.dashboard-stat-icon{width:35px;height:35px;border-radius:10px}.dashboard-stat-icon svg{width:18px;height:18px}.dashboard-stat-value{font-size:1.15rem}.dashboard-stat-label{font-size:.68rem}}
+</style>
+
 </head>
 <body>
 <script>
-const APP_VERSION = "v3.8";
+const APP_VERSION = "v5.4";
 (function(){
     const key = "app_ver_" + location.pathname;
     const stored = localStorage.getItem(key);
@@ -773,6 +810,18 @@ const APP_VERSION = "v3.8";
 <button class="logout-btn btn-press" id="logoutBtn">خروج</button>
 </div>
 </div>
+
+<div class="dashboard-stats" id="dashboardStats">
+  <div class="dashboard-stat">
+    <div class="dashboard-stat-icon"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-2.99 1.34-2.99 3S14.34 11 16 11zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></div>
+    <div class="dashboard-stat-info"><span class="dashboard-stat-label">إجمالي الأعضاء</span><span class="dashboard-stat-value" id="dashboardMembersCount">0</span></div>
+  </div>
+  <div class="dashboard-stat">
+    <div class="dashboard-stat-icon"><svg viewBox="0 0 24 24"><path d="M10 4H2c-1.1 0-1.99.9-1.99 2L0 18c0 1.1.9 2 2 2h20c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-10l-2-2z"/></svg></div>
+    <div class="dashboard-stat-info"><span class="dashboard-stat-label">إجمالي المجموعات</span><span class="dashboard-stat-value" id="dashboardGroupsCount">0</span></div>
+  </div>
+</div>
+
 <div class="control-tabs" style="margin-bottom:12px; width:100%; max-width:700px;">
 <button class="control-tab active btn-press" id="mainTabMembers" onclick="switchMainTab('members')">
 <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
@@ -1007,7 +1056,7 @@ const APP_VERSION = "v3.8";
 </div>
 <div class="control-content" id="tab-logs">
 <div class="log-section">
-<div class="log-header"><h3><svg viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>سجل الاحداث</h3><button id="clearAllLogsBtn" class="logout-btn btn-press" onclick="clearAllLogsPrompt()" style="color:#ef4444;border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.1);font-size:.78rem;padding:6px 12px">حذف الكل</button></div>
+<div class="log-header"><h3><svg viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>سجل الاحداث</h3></div>
 <div class="log-list" id="controlLogList"></div>
 </div>
 </div>
@@ -1339,6 +1388,8 @@ function normalizeRemoteState(data) {
     points: formatPoints(g.points)
   }));
 
+  state.logs = filterDeletedLogs(state.logs);
+
   state.assistants = state.assistants
     .filter(a => String(a.username || '').trim().toLowerCase() !== 'admin')
     .map(a => {
@@ -1477,42 +1528,30 @@ function mergeAssistants(localItems, remoteItems) {
   return Object.values(out);
 }
 
+const DELETED_LOGS_KEY = 'membersAppDeletedLogIds';
+function readDeletedLogIds(){
+  try { const v=JSON.parse(localStorage.getItem(DELETED_LOGS_KEY)||'[]'); return Array.isArray(v)?v.map(String):[]; } catch { return []; }
+}
+function markDeletedLogIds(ids){
+  const set=new Set(readDeletedLogIds());
+  (Array.isArray(ids)?ids:[ids]).forEach(id=>{ if(id!==undefined&&id!==null) set.add(String(id)); });
+  try { localStorage.setItem(DELETED_LOGS_KEY, JSON.stringify([...set])); } catch {}
+}
+function filterDeletedLogs(list){
+  const deleted=new Set(readDeletedLogIds());
+  return (Array.isArray(list)?list:[]).filter(l=>!deleted.has(String(l?.id)));
+}
+
 function mergeLogs(localLogs, baseLogs, remoteLogs) {
-  // Three-way merge for logs. A log that existed in the base snapshot and was
-  // deliberately removed locally stays removed from the merged cloud state
-  // as long as it was not independently changed remotely. New remote logs are
-  // preserved, so deleting one event never wipes events created elsewhere.
-  const base = mapById(baseLogs);
-  const local = mapById(localLogs);
-  const remote = mapById(remoteLogs);
+  const deleted = new Set(readDeletedLogIds());
   const out = {};
-
-  Object.keys(remote).forEach(id => {
-    out[id] = deepClone(remote[id]);
+  [baseLogs, remoteLogs, localLogs].forEach(list => {
+    (Array.isArray(list) ? list : []).forEach(log => {
+      if(log && log.id !== undefined && log.id !== null && !deleted.has(String(log.id))) {
+        out[String(log.id)] = deepClone(log);
+      }
+    });
   });
-
-  // Local logs that are new or still present are kept.
-  Object.keys(local).forEach(id => {
-    const l = local[id];
-    const b = base[id];
-    const r = remote[id];
-    if(!b) {
-      out[id] = deepClone(l);
-      return;
-    }
-    if(r && objectsEqual(l, b)) return;
-    if(r) out[id] = deepClone(l);
-  });
-
-  // Explicit local deletion: remove from the final merged state when the
-  // remote copy is unchanged from our base snapshot.
-  Object.keys(base).forEach(id => {
-    if(local[id] !== undefined) return;
-    if(remote[id] !== undefined && objectsEqual(remote[id], base[id])) {
-      delete out[id];
-    }
-  });
-
   return Object.values(out).sort((a,b) => Number(b.id || 0) - Number(a.id || 0));
 }
 
@@ -1686,20 +1725,10 @@ function saveAll() {
   }
 }
 
-const LOGS_CLEARED_MIGRATION_KEY = 'membersAppLogsClearedV1';
-function logsAlreadyCleared(){ try{return localStorage.getItem(LOGS_CLEARED_MIGRATION_KEY)==='1';}catch{return false;} }
-function markLogsCleared(){ try{localStorage.setItem(LOGS_CLEARED_MIGRATION_KEY,'1');}catch{} }
-async function clearExistingLogsOnce(){
-if(logsAlreadyCleared()) return;
-logs=[]; Store.set('logs',[]);
-if(firebaseAvailable && dbRef){
-  if(!firebaseConnected) return;
-  try{
-    await dbRef.transaction(remote => ({...(remote||{}),logs:[],lastUpdate:Date.now(),lastClientId:firebaseClientId}));
-  }catch(e){ console.error('Initial log cleanup error:',e); return; }
-}
-markLogsCleared();
-}
+// ===== LOG PERSISTENCE =====
+// Logs are permanent application data. The old startup migration that cleared
+// every log has been removed so reloads, edits, and next-day visits preserve history.
+async function clearExistingLogsOnce(){ return; }
 
 // ===== LOAD FROM FIREBASE =====
 function initFirebase() {
@@ -1720,8 +1749,6 @@ function initFirebase() {
     dataInitialized = true;
     setSyncStatus('offline', '');
 
-    logs = [];
-    Store.set('logs', []);
     if(currentUser) {
       document.getElementById('currentUserName').textContent = currentUser.username;
       showScreen('dashboard');
@@ -2038,6 +2065,7 @@ crossfadeSwitch(mList, gList, renderMainGroups);
 }
 }
 function renderMainGroups() {
+updateDashboardStats();
 const container = document.getElementById('groupsMainList');
 if(!container) return;
 if(!groups || groups.length === 0) {
@@ -2133,6 +2161,14 @@ container.innerHTML = html;
 filterGroupDetailLog(currentGroupDetailFilter);
 }
 // ===== RENDER MEMBERS =====
+
+function updateDashboardStats(){
+  const mc=document.getElementById('dashboardMembersCount');
+  const gc=document.getElementById('dashboardGroupsCount');
+  if(mc) mc.textContent=Array.isArray(members)?members.length:0;
+  if(gc) gc.textContent=Array.isArray(groups)?groups.length:0;
+}
+
 function renderMembers() {
 const container = document.getElementById('membersList');
 if(!container) return;
@@ -2278,6 +2314,7 @@ buildGroupPicker('newMemberGroup', '');
 }
 // ===== CONTROL MEMBERS =====
 function renderControlMembers() {
+updateDashboardStats();
 const container = document.getElementById('controlMembersList');
 if(!container) return;
 if(!members || members.length === 0) {
@@ -2375,6 +2412,7 @@ time: new Date().toLocaleString('ar-SA')
 saveAll();
 renderMembers();
 renderControlMembers();
+renderControlLogs();
 document.getElementById('newMemberName').value = '';
 document.getElementById('newMemberRank').value = '';
 buildGroupPicker('newMemberGroup', '');
@@ -2402,6 +2440,7 @@ time: new Date().toLocaleString('ar-SA')
 saveAll();
 renderMembers();
 renderControlMembers();
+renderControlLogs();
 if(currentGroupDetailId) renderGroupDetail(currentGroupDetailId);
 showToast('تم حذف العضو بنجاح', 'success');
 };
@@ -2458,6 +2497,7 @@ time: new Date().toLocaleString('ar-SA')
 saveAll();
 renderMembers();
 renderControlMembers();
+renderControlLogs();
 if(document.getElementById('memberDetailScreen').classList.contains('active') && currentMemberId === id) {
 openMemberDetail(id, detailOrigin);
 }
@@ -2469,6 +2509,7 @@ showToast('تم تحديث البيانات بنجاح', 'success');
 }
 // ===== CONTROL GROUPS =====
 function renderControlGroups() {
+updateDashboardStats();
 const container = document.getElementById('controlGroupsList');
 if(!container) return;
 if(!groups || groups.length === 0) {
@@ -2516,9 +2557,20 @@ name: name,
 points: 0
 };
 groups.push(newGrp);
+logs.unshift({
+  id: createLogId(),
+  action: 'إضافة مجموعة جديدة',
+  memberName: name,
+  details: 'تمت إضافة المجموعة',
+  type: 'plus',
+  groupId: newGrp.id,
+  isGroupLog: true,
+  time: new Date().toLocaleString('ar-SA')
+});
 saveAll();
 renderControlGroups();
 renderMainGroups();
+renderControlLogs();
 populateGroupSelects();
 document.getElementById('newGroupName').value = '';
 showToast('تمت إضافة المجموعة بنجاح', 'success');
@@ -2544,10 +2596,22 @@ if(!name) {
 showToast('اسم المجموعة لا يمكن أن يكون فارغاً');
 return;
 }
+const oldName = g.name;
 g.name = name;
+logs.unshift({
+  id: createLogId(),
+  action: 'تعديل بيانات المجموعة',
+  memberName: name,
+  details: oldName === name ? 'تم التعديل' : `تم تغيير الاسم من \"${oldName}\" إلى \"${name}\"`,
+  type: 'note',
+  groupId: g.id,
+  isGroupLog: true,
+  time: new Date().toLocaleString('ar-SA')
+});
 saveAll();
 renderControlGroups();
 renderMainGroups();
+renderControlLogs();
 renderMembers();
 populateGroupSelects();
 closeModal();
@@ -2558,6 +2622,16 @@ if(!hasPerm('remove_groups')) { showToast('ليس لديك صلاحية حذف �
 const g = groups.find(x => x.id === id);
 if(!g) return;
 confirmCallback = function() {
+logs.unshift({
+  id: createLogId(),
+  action: 'حذف مجموعة',
+  memberName: g.name,
+  details: 'تم الحذف',
+  type: 'minus',
+  groupId: g.id,
+  isGroupLog: true,
+  time: new Date().toLocaleString('ar-SA')
+});
 groups = groups.filter(x => x.id !== id);
 // Remove group reference from members
 members.forEach(m => {
@@ -2569,6 +2643,7 @@ renderControlGroups();
 renderMainGroups();
 renderMembers();
 populateGroupSelects();
+renderControlLogs();
 showToast('تم حذف المجموعة بنجاح', 'success');
 
 };
@@ -2577,448 +2652,164 @@ document.getElementById('confirmMsg').textContent = `هل أنت متأكد من
 document.getElementById('confirmModal').className = 'modal confirm-modal';
 document.getElementById('confirmOverlay').classList.add('active');
 }
+// ===== POINT ACTIONS / LIMITS =====
+const POINT_ADD_OPTIONS = [
+  { key:'event', label:'إقامة فعالية', max:15 },
+  { key:'organized_photo', label:'تصوير منظم', max:5 },
+  { key:'organized_presentation', label:'إلقاء منظم', max:10 },
+  { key:'event_innovation', label:'ابتكار الفعالية', max:10 },
+  { key:'other', label:'أخرى', max:Infinity }
+];
+const POINT_MINUS_OPTIONS = [
+  { key:'organizer_randomness', label:'عشوائية وسط إقامة الفعالية (من الجهة المنظمة)', max:10 },
+  { key:'participant_randomness', label:'عشوائية وسط إقامة الفعالية (من الجهة المشاركة)', max:15 },
+  { key:'unorganized_photo', label:'تصوير غير منظم', max:7 },
+  { key:'unorganized_presentation', label:'إلقاء غير منظم', max:7 },
+  { key:'other_minus', label:'أخرى', max:Infinity }
+];
+function pointMode(type){
+  return String(type||'').toLowerCase().includes('minus') ? 'minus' : 'plus';
+}
+function getPointOption(type,key){
+  const list=pointMode(type)==='plus'?POINT_ADD_OPTIONS:POINT_MINUS_OPTIONS;
+  return list.find(o=>o.key===key)||list[0];
+}
+function normalizeDigits(value){
+  return String(value ?? '')
+    .replace(/[٠-٩]/g,d=>String(d.charCodeAt(0)-0x0660))
+    .replace(/[۰-۹]/g,d=>String(d.charCodeAt(0)-0x06F0))
+    .replace(/[٬,]/g,'')
+    .replace(/٫/g,'.');
+}
+function normalizePointInput(el){
+  if(!el)return;
+  const normalized=normalizeDigits(el.value);
+  if(el.value!==normalized) el.value=normalized;
+}
+function renderPointOptions(type,selectedKey){
+  const list=type==='plus'?POINT_ADD_OPTIONS:POINT_MINUS_OPTIONS;
+  return list.map((o,i)=>`<button type="button" class="point-option-btn ${o.key===selectedKey?'active':(!selectedKey&&i===0?'active':'')}" data-point-key="${o.key}" onclick="selectPointOption('${o.key}')"><span class="point-option-label">${esc(o.label)}</span></button>`).join('');
+}
+function updatePointLimitUI(type){
+  const keyEl=document.getElementById('pointOption'), amountEl=document.getElementById('modalAmount');
+  if(!keyEl||!amountEl)return;
+  const mode=pointMode(type);
+  const selectedKey = selectedPointOptionKey || keyEl.value;
+  const option=getPointOption(mode,selectedKey);
+  selectedPointOptionKey = option.key;
+  keyEl.value = option.key;
+  normalizePointInput(amountEl);
+  amountEl.max=Number.isFinite(option.max)?String(option.max):'';
+  amountEl.placeholder=Number.isFinite(option.max)?`من 1 إلى ${option.max}`:'اكتب عدد النقاط';
+  document.querySelectorAll('.point-option-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.pointKey===option.key));
+  updatePointWarning(mode,option,amountEl);
+}
+function updatePointWarning(type,option,amountEl){
+  const box=document.getElementById('pointLimitWarning');
+  if(!box||!amountEl)return;
+  const raw=normalizeDigits(amountEl.value).trim();
+  const amount=raw===''?NaN:Number.parseInt(raw,10);
+  const exceeded=Number.isFinite(option.max)&&Number.isInteger(amount)&&amount>option.max;
+  box.classList.toggle('show',exceeded);
+  box.querySelector('.point-warning-text').textContent=type==='plus'?'تجاوزت الحد في الزيادة!':'تجاوزت الحد في الخصم!';
+}
+function updatePointRating(){ updatePointLimitUI(currentModalType); }
+let selectedPointOptionKey = null;
+function selectPointOption(key){
+  const el=document.getElementById('pointOption');
+  if(!el)return;
+  const mode=pointMode(currentModalType);
+  const option = getPointOption(mode, key);
+  selectedPointOptionKey = option.key;
+  el.value = option.key;
+  document.querySelectorAll('.point-option-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.pointKey===option.key));
+  const amount=document.getElementById('modalAmount');
+  if(amount){
+    amount.value='';
+    amount.max=Number.isFinite(option.max)?String(option.max):'';
+    amount.placeholder=Number.isFinite(option.max)?`من 1 إلى ${option.max}`:'اكتب عدد النقاط';
+  }
+  updatePointWarning(mode,option,amount);
+}
+function buildPointModalBody(type,submitFn,submitText){
+  const list=type==='plus'?POINT_ADD_OPTIONS:POINT_MINUS_OPTIONS, first=list[0];
+  selectedPointOptionKey = first.key;
+  return `<label>نوع ${type==='plus'?'النشاط':'الخصم'}</label><div class="point-options-grid">${renderPointOptions(type,first.key)}</div><select id="pointOption" style="display:none">${list.map(o=>`<option value="${o.key}">${esc(o.label)}</option>`).join('')}</select><div id="pointLimitWarning" class="point-limit-warning"><span class="point-warning-icon">⚠</span><span class="point-warning-text">تجاوزت الحد في ${type==='plus'?'الزيادة':'الخصم'}!</span></div><label>عدد النقاط</label><input type="text" id="modalAmount" placeholder="من 1 إلى ${first.max}" min="1" max="${Number.isFinite(first.max)?first.max:''}" step="1" inputmode="numeric" autocomplete="off" oninput="normalizePointInput(this);updatePointRating()"><label>السبب / التفاصيل</label><textarea id="modalReason" placeholder="اكتب السبب / التفاصيل..."></textarea><button class="modal-submit btn-press" onclick="${submitFn}()">${submitText}</button>`;
+}
+function validatePointAmount(type){
+  const amountEl=document.getElementById('modalAmount'), keyEl=document.getElementById('pointOption');
+  const amount=Number.parseInt(normalizeDigits(amountEl?.value).trim(),10), option=getPointOption(type,keyEl?.value);
+  if(!Number.isInteger(amount)||amount<=0){
+    showToast('يرجى إدخال عدد نقاط صحيح');
+    amountEl?.focus();
+    return null;
+  }
+  if(Number.isFinite(option.max) && amount>option.max){
+    showToast(`أنت تجاوزت الحد المسموح (${option.max} نقاط)`);
+    if(amountEl){amountEl.focus();amountEl.select?.();}
+    return null;
+  }
+  return {amount,option};
+}
+
 // ===== GROUP-WIDE POINTS / NOTES MODAL =====
 function openGroupModal(type, groupId) {
-currentModalType = type;
-currentGroupModalId = groupId;
-const g = groups.find(x => Number(x.id) === Number(groupId));
-if(!g) return;
-const groupMembersCount = members.filter(m => Number(m.groupId) === Number(g.id)).length;
-const modal = document.getElementById('modal');
-const title = document.getElementById('modalTitle');
-const body = document.getElementById('modalBody');
-if(type === 'groupPlus') {
-modal.className = 'modal green';
-title.textContent = `إضافة نقاط للمجموعة "${g.name}"`;
-body.innerHTML = `
-<label>عدد النقاط</label>
-<input type="number" id="modalAmount" placeholder="مثال: 10" min="1">
-<label>السبب / التفاصيل</label>
-<textarea id="modalReason" placeholder="اكتب سبب إضافة النقاط..."></textarea>
-<button class="modal-submit btn-press" onclick="submitGroupModal()">تأكيد إضافة النقاط للمجموعة</button>
-`;
-} else if(type === 'groupMinus') {
-modal.className = 'modal red';
-title.textContent = `خصم نقاط من المجموعة "${g.name}"`;
-body.innerHTML = `
-<label>عدد النقاط</label>
-<input type="number" id="modalAmount" placeholder="مثال: 10" min="1">
-<label>السبب / التفاصيل</label>
-<textarea id="modalReason" placeholder="اكتب سبب الخصم..."></textarea>
-<button class="modal-submit btn-press" onclick="submitGroupModal()">تأكيد خصم النقاط من المجموعة</button>
-`;
-} else if(type === 'groupNote') {
-modal.className = 'modal blue';
-title.textContent = `إضافة ملاحظة للمجموعة "${g.name}"`;
-body.innerHTML = `
-<label>نص الملاحظة</label>
-<textarea id="modalReason" placeholder="اكتب الملاحظة هنا..."></textarea>
-<button class="modal-submit btn-press" onclick="submitGroupModal()">حفظ الملاحظة</button>
-`;
+  currentModalType=type; currentGroupModalId=groupId;
+  const g=groups.find(x=>Number(x.id)===Number(groupId)); if(!g)return;
+  const modal=document.getElementById('modal'), title=document.getElementById('modalTitle'), body=document.getElementById('modalBody');
+  if(type==='groupPlus'){modal.className='modal green';title.textContent=`إضافة نقاط للمجموعة "${g.name}"`;body.innerHTML=buildPointModalBody('plus','submitGroupModal','تأكيد إضافة النقاط للمجموعة');setTimeout(()=>updatePointLimitUI('plus'),0);}
+  else if(type==='groupMinus'){modal.className='modal red';title.textContent=`خصم نقاط من المجموعة "${g.name}"`;body.innerHTML=buildPointModalBody('minus','submitGroupModal','تأكيد خصم النقاط من المجموعة');setTimeout(()=>updatePointLimitUI('minus'),0);}
+  else if(type==='groupNote'){modal.className='modal blue';title.textContent=`إضافة ملاحظة للمجموعة "${g.name}"`;body.innerHTML=`<label>نص الملاحظة</label><textarea id="modalReason" placeholder="اكتب الملاحظة هنا..."></textarea><button class="modal-submit btn-press" onclick="submitGroupModal()">حفظ الملاحظة</button>`;}
+  document.getElementById('modalOverlay').classList.add('active');
 }
-document.getElementById('modalOverlay').classList.add('active');
-}
-function submitGroupModal() {
-const g = groups.find(x => Number(x.id) === Number(currentGroupModalId));
-if(!g) return;
-g.points = Number(g.points) || 0;
-const reason = document.getElementById('modalReason') ? document.getElementById('modalReason').value.trim() : '';
-if(currentModalType === 'groupPlus') {
-if(!hasPerm('add_points')) { showToast('ليس لديك صلاحية'); return; }
-const amount = parseInt(document.getElementById('modalAmount').value, 10);
-if(isNaN(amount) || amount <= 0) { showToast('يرجى ادخال عدد نقاط صحيح'); return; }
-g.points += amount;
-logs.unshift({
-id: createLogId(),
-action: `إضافة ${amount} نقاط للمجموعة`,
-memberName: g.name,
-details: reason || 'بدون سبب',
-type: 'plus',
-groupId: g.id,
-isGroupLog: true,
-time: new Date().toLocaleString('ar-SA')
-});
-showToast(`تمت إضافة ${amount} نقطة للمجموعة "${g.name}"`, 'success');
-} else if(currentModalType === 'groupMinus') {
-if(!hasPerm('remove_points')) { showToast('ليس لديك صلاحية'); return; }
-const amount = parseInt(document.getElementById('modalAmount').value, 10);
-if(isNaN(amount) || amount <= 0) { showToast('يرجى ادخال عدد نقاط صحيح'); return; }
-const actual = amount;
-g.points -= amount;
-logs.unshift({
-id: createLogId(),
-action: `خصم ${actual} نقاط من المجموعة`,
-memberName: g.name,
-details: reason || 'بدون سبب',
-type: 'minus',
-groupId: g.id,
-isGroupLog: true,
-time: new Date().toLocaleString('ar-SA')
-});
-showToast(`تم خصم ${actual} نقطة من المجموعة "${g.name}"`, 'success');
-} else if(currentModalType === 'groupNote') {
-if(!reason) { showToast('يرجى كتابة الملاحظة'); return; }
-logs.unshift({
-id: createLogId(),
-action: 'ملاحظة للمجموعة',
-memberName: g.name,
-details: reason,
-type: 'note',
-groupId: g.id,
-isGroupLog: true,
-time: new Date().toLocaleString('ar-SA')
-});
-showToast(`تمت إضافة الملاحظة للمجموعة "${g.name}"`, 'success');
-}
-saveAll();
-renderMembers();
-renderControlMembers();
-renderMainGroups();
-renderControlGroups();
-if(document.getElementById('groupDetailScreen').classList.contains('active') && currentGroupDetailId) {
-renderGroupDetail(currentGroupDetailId);
-}
-closeModal();
-}
-// ===== CONTROL ASSISTANTS =====
-function togglePerm(element, perm) {
-const card = element.closest('.perm-card') || element;
-const checkbox = card.querySelector('input[type="checkbox"]');
-if(!checkbox) return;
-checkbox.checked = !checkbox.checked;
-card.classList.toggle('selected', checkbox.checked);
-}
-function renderControlAssistants() {
-const container = document.getElementById('controlAssistantsList');
-if(!container) return;
-if(!assistants || assistants.length === 0) {
-container.innerHTML = '<div class="empty-state">لا يوجد مساعدين</div>';
-return;
-}
-const permNames = {
-add_points: 'إضافة نقاط',
-remove_points: 'خصم نقاط',
-add_members: 'إضافة أعضاء',
-remove_members: 'إزالة أعضاء',
-edit_members: 'تعديل أعضاء',
-add_assistants: 'إضافة مساعدين',
-delete_assistants: 'حذف المساعدين',
-add_groups: 'إضافة مجموعات',
-remove_groups: 'حذف مجموعات',
-delete_logs: 'حذف السجل'
-};
-let html = '';
-assistants.forEach(a => {
-const isMainAdmin = a.username === 'Naif';
-const isCurrentUser = currentUser && String(a.username).toLowerCase() === String(currentUser.username).toLowerCase();
-const canDeleteAssistant = hasPerm('delete_assistants') && !isMainAdmin && !isCurrentUser;
-const canEditAssistant = hasPerm('add_assistants') && !isMainAdmin;
-const assistantActions = `${canEditAssistant ? `<button class="assistant-edit-btn btn-press" onclick="openAssistantPermissionsModal('${String(a.id)}')" title="تعديل الصلاحيات"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75-10.06 10.06zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0-1.41 0-1.02.39-1.41l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>` : ''}${canDeleteAssistant ? `<div class="delete-x" onclick="promptDeleteAssistant('${String(a.id)}')" title="حذف"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></div>` : ''}`;
-
-let permsTags = '';
-if(isMainAdmin) {
-  permsTags = '<span class="assistant-perm-tag">صلاحيات كاملة (مدير النظام)</span>';
-} else if(a.permissions && a.permissions.length > 0) {
-  a.permissions.forEach(p => {
-    permsTags += `<span class="assistant-perm-tag">${permNames[p] || p}</span>`;
-  });
-} else {
-  permsTags = '<span class="assistant-perm-tag">لا توجد صلاحيات</span>';
-}
-
-html += `
-  <div class="assistant-card">
-    <div class="assistant-card-header">
-      <div class="assistant-card-name">
-        <span class="assistant-card-name-text">${esc(a.username)}</span>
-        <div class="member-name-icons">
-          ${assistantActions}
-        </div>
-      </div>
-    </div>
-    <div class="assistant-card-perms">${permsTags}</div>
-  </div>
-`;
-
-});
-container.innerHTML = html;
-}
-function addNewAssistant() {
-if(!hasPerm('add_assistants')) {
-showToast('ليس لديك صلاحية إضافة مساعدين');
-return;
-}
-const username = document.getElementById('newAssistantName').value.trim();
-const password = document.getElementById('newAssistantPass').value.trim();
-if(!username || !password) {
-showToast('يرجى ملء اسم المستخدم وكلمة المرور');
-return;
-}
-if(assistants.some(a => a.username.toLowerCase() === username.toLowerCase())) {
-showToast('اسم المستخدم هذا مستخدم بالفعل');
-return;
-}
-const perms = [];
-['add_points','remove_points','add_members','remove_members','edit_members','add_assistants','delete_assistants','add_groups','remove_groups','delete_logs'].forEach(p => {
-const cb = document.getElementById(`perm_${p}`);
-if(cb && cb.checked) perms.push(p);
-});
-const newAst = {
-id: 'ast_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8),
-username: username,
-password: password,
-permissions: perms
-};
-assistants.push(newAst);
-saveAll();
-renderControlAssistants();
-document.getElementById('newAssistantName').value = '';
-document.getElementById('newAssistantPass').value = '';
-document.querySelectorAll('.perm-card').forEach(c => {
-c.classList.remove('selected');
-const cb = c.querySelector('input');
-if(cb) cb.checked = false;
-});
-showToast('تمت إضافة المساعد بنجاح', 'success');
-switchControlTab('assistants');
-}
-
-const ASSISTANT_PERMISSION_KEYS = [
-'add_points','remove_points','add_members','remove_members','edit_members',
-'add_assistants','delete_assistants','add_groups','remove_groups','delete_logs'
-];
-
-function openAssistantPermissionsModal(id) {
-if(!hasPerm('add_assistants')) {
-showToast('ليس لديك صلاحية تعديل صلاحيات المساعدين');
-return;
-}
-const a = assistants.find(x => String(x.id) === String(id));
-if(!a) return;
-if(String(a.username || '').trim().toLowerCase() === 'naif') {
-showToast('لا يمكن تعديل صلاحيات مدير النظام');
-return;
-}
-
-const body = document.getElementById('assistantPermBody');
-if(!body) return;
-
-const names = {
-add_points:'إضافة نقاط',
-remove_points:'خصم نقاط',
-add_members:'إضافة أعضاء',
-remove_members:'إزالة أعضاء',
-edit_members:'تعديل بيانات الأعضاء',
-add_assistants:'إضافة مساعدين',
-delete_assistants:'حذف المساعدين',
-add_groups:'إضافة مجموعات',
-remove_groups:'حذف مجموعات',
-delete_logs:'حذف السجل'
-};
-
-const selected = Array.isArray(a.permissions) ? a.permissions : [];
-body.innerHTML = `
-<div style="font-size:.95rem;color:#d4b896;margin-bottom:2px">المساعد: <strong style="color:#fff">${esc(a.username)}</strong></div>
-<div class="assistant-perm-editor">
-${ASSISTANT_PERMISSION_KEYS.map(p => `
-<div class="perm-card ${selected.includes(p) ? 'selected' : ''}" onclick="toggleAssistantPerm(this)">
-<input type="checkbox" id="assistant_edit_perm_${p}" value="${p}" ${selected.includes(p) ? 'checked' : ''}>
-<span class="perm-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
-<label for="assistant_edit_perm_${p}" onclick="event.stopPropagation()">${names[p]}</label>
-</div>`).join('')}
-</div>
-<button class="modal-submit btn-press" onclick="saveAssistantPermissions('${String(a.id)}')">حفظ الصلاحيات</button>
-`;
-document.getElementById('assistantPermOverlay').classList.add('active');
-}
-
-function toggleAssistantPerm(card) {
-const cb = card.querySelector('input[type="checkbox"]');
-if(!cb) return;
-cb.checked = !cb.checked;
-card.classList.toggle('selected', cb.checked);
-}
-
-function closeAssistantPermModal() {
-const overlay = document.getElementById('assistantPermOverlay');
-if(overlay) overlay.classList.remove('active');
-}
-
-function saveAssistantPermissions(id) {
-if(!hasPerm('add_assistants')) {
-showToast('ليس لديك صلاحية تعديل صلاحيات المساعدين');
-return;
-}
-const a = assistants.find(x => String(x.id) === String(id));
-if(!a) return;
-if(String(a.username || '').trim().toLowerCase() === 'naif') {
-showToast('لا يمكن تعديل صلاحيات مدير النظام');
-return;
-}
-
-a.permissions = ASSISTANT_PERMISSION_KEYS.filter(p => {
-const cb = document.getElementById(`assistant_edit_perm_${p}`);
-return cb && cb.checked;
-});
-
-saveAll();
-renderControlAssistants();
-closeAssistantPermModal();
-showToast('تم تحديث صلاحيات المساعد بنجاح', 'success');
-}
-
-function promptDeleteAssistant(id) {
-if(!hasPerm('delete_assistants')) {
-showToast('ليس لديك صلاحية حذف المساعدين');
-return;
-}
-const a = assistants.find(x => String(x.id) === String(id));
-if(!a) return;
-if((currentUser && String(a.username).toLowerCase() === String(currentUser.username).toLowerCase()) || String(a.username).toLowerCase() === 'naif' ) {
-showToast('لا يمكنك حذف حسابك بنفسك');
-return;
-}
-confirmCallback = function() {
-  const deletedId = String(id);
-  addDeletedAssistantId(deletedId);
-  assistants = assistants.filter(x => String(x.id) !== deletedId);
-  // Save the remaining list locally without allowing the generic merge to
-  // resurrect the deleted record; the tombstone above is consulted by the merge.
-  saveAll();
-  renderControlAssistants();
-  if(firebaseAvailable && dbRef && firebaseConnected && dataInitialized) {
-    deleteAssistantFromFirebase(deletedId)
-      .then(() => {
-        // Refresh the cloud state after the explicit deletion transaction.
-        return dbRef.once('value');
-      })
-      .then(snapshot => {
-        const state = normalizeRemoteState(snapshot.val() || {});
-        firebaseBaseState = state;
-        applyStateToUI(state);
-        Store.set('assistants', assistants);
-        showToast('تم حذف المساعد بنجاح', 'success');
-      })
-      .catch(err => {
-        console.error('Assistant delete sync error:', err);
-        showToast('تم حذف المساعد محليًا، وسيتم حذفه من باقي الأجهزة عند المزامنة', 'success');
-      });
-  } else {
-    showToast('تم حذف المساعد محليًا، وسيتم حذفه من باقي الأجهزة عند عودة الاتصال', 'success');
+function submitGroupModal(){
+  const g=groups.find(x=>Number(x.id)===Number(currentGroupModalId)); if(!g)return; g.points=Number(g.points)||0;
+  const reason=document.getElementById('modalReason')?.value.trim()||'';
+  if(currentModalType==='groupPlus'){
+    if(!hasPerm('add_points')){showToast('ليس لديك صلاحية');return;} const result=validatePointAmount('plus'); if(!result)return; const {amount,option}=result;
+    g.points+=amount; logs.unshift({id:createLogId(),action:`إضافة ${amount} نقاط للمجموعة`,memberName:g.name,details:`${option.label}${reason?' — '+reason:''}`,type:'plus',groupId:g.id,isGroupLog:true,pointCategory:option.key,pointCategoryLabel:option.label,pointMax:option.max,time:new Date().toLocaleString('ar-SA')}); showToast(`تمت إضافة ${amount} نقطة للمجموعة "${g.name}"`,'success');
+  } else if(currentModalType==='groupMinus'){
+    if(!hasPerm('remove_points')){showToast('ليس لديك صلاحية');return;} const result=validatePointAmount('minus'); if(!result)return; const {amount,option}=result;
+    g.points-=amount; logs.unshift({id:createLogId(),action:`خصم ${amount} نقاط من المجموعة`,memberName:g.name,details:`${option.label}${reason?' — '+reason:''}`,type:'minus',groupId:g.id,isGroupLog:true,pointCategory:option.key,pointCategoryLabel:option.label,pointMax:option.max,time:new Date().toLocaleString('ar-SA')}); showToast(`تم خصم ${amount} نقطة من المجموعة "${g.name}"`,'success');
+  } else if(currentModalType==='groupNote'){
+    if(!reason){showToast('يرجى كتابة الملاحظة');return;} logs.unshift({id:createLogId(),action:'ملاحظة للمجموعة',memberName:g.name,details:reason,type:'note',groupId:g.id,isGroupLog:true,time:new Date().toLocaleString('ar-SA')}); showToast('تمت إضافة الملاحظة للمجموعة بنجاح','success');
   }
-};
-document.getElementById('confirmTitle').textContent = 'حذف المساعد';
-document.getElementById('confirmMsg').textContent = `هل أنت متأكد من حذف المساعد "${a.username}"؟`;
-document.getElementById('confirmModal').className = 'modal confirm-modal';
-document.getElementById('confirmOverlay').classList.add('active');
+  const updatedGroupId = g.id;
+  const groupDetailWasActive = document.getElementById('groupDetailScreen')?.classList.contains('active');
+  saveAll(); closeModal(); renderMainGroups(); renderControlGroups(); renderControlLogs();
+  if(groupDetailWasActive) {
+    currentGroupDetailId = updatedGroupId;
+    renderGroupDetail(updatedGroupId);
+    filterGroupDetailLog(currentGroupDetailFilter);
+  }
 }
-// ===== CONTROL LOGS =====
-function renderControlLogs() {
-const container = document.getElementById('controlLogList');
-if(!container) return;
-const clearBtn = document.getElementById('clearAllLogsBtn');
-if(clearBtn) clearBtn.style.display = hasPerm('delete_logs') ? '' : 'none';
-if(!logs || logs.length === 0) {
-container.innerHTML = '<div class="empty-state">لا يوجد سجل أحداث</div>';
-return;
-}
-let html = '';
-[...logs].sort((a,b) => Number(b.id || 0) - Number(a.id || 0)).forEach(l => {
-html += `
+
+// ===== CONTROL PANEL EVENT LOG =====
+function renderControlLogs(){
+  const container = document.getElementById('controlLogList');
+  if(!container) return;
+  const list = (logs || []).slice().sort((a,b) => Number(b.id || 0) - Number(a.id || 0));
+  if(!list.length){
+    container.innerHTML = '<div class="empty-state">لا يوجد سجلات للأحداث</div>';
+    return;
+  }
+  let html = '';
+  list.forEach(l => {
+    const type = ['plus','minus','note'].includes(String(l.type)) ? String(l.type) : 'note';
+    const action = esc(l.action || 'حدث');
+    const details = esc(l.details || '');
+    const owner = l.memberName ? ` — ${esc(l.memberName)}` : '';
+    html += `
 <div class="log-item-with-delete" data-log-id="${l.id}">
-<div class="log-left">
-<button class="log-delete-btn btn-press ${hasPerm('delete_logs') ? 'can-delete-log' : ''}" onclick="event.stopPropagation();promptDeleteLog(${l.id})" title="حذف"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
-<div><span class="log-action ${l.type}">${esc(l.action)}</span> - ${esc(l.memberName)} (${esc(l.details)})</div>
-</div>
-<span class="log-time">${l.time}</span>
-</div>
-`;
-});
-container.innerHTML = html;
-setupLogGestures(container);
-}
-function setupLogGestures(container) {
-  // Deletion is intentionally handled only by the visible red X button.
-  // This avoids browser context/selection menus from double-click or long-press.
-  return;
-}
-
-function promptDeleteLog(id) {
-  if(!hasPerm('delete_logs')) { showToast('ليس لديك صلاحية حذف السجل'); return; }
-  const log = (logs || []).find(l => String(l.id) === String(id));
-  if(!log) return;
-  confirmCallback = function() {
-    deleteSingleLog(id);
-  };
-  document.getElementById('confirmTitle').textContent = 'حذف السجل';
-  document.getElementById('confirmMsg').textContent = 'هل أنت متأكد من حذف السجل المحدد؟ لا يمكن التراجع عن هذا الإجراء.';
-  document.getElementById('confirmModal').className = 'modal confirm-modal';
-  document.getElementById('confirmOverlay').classList.add('active');
-}
-
-function deleteSingleLog(id) {
-if(!hasPerm('delete_logs')) { showToast('ليس لديك صلاحية حذف السجل'); return; }
-logs = logs.filter(l => String(l.id) !== String(id));
-saveAll();
-renderControlLogs();
-if(document.getElementById('memberDetailScreen').classList.contains('active') && currentMemberId) {
-filterDetailLog(currentDetailFilter);
-}
-if(document.getElementById('groupDetailScreen').classList.contains('active') && currentGroupDetailId) {
-filterGroupDetailLog(currentGroupDetailFilter);
-}
-showToast('تم حذف السجل بنجاح', 'success');
-}
-function clearAllLogsPrompt() {
-if(!hasPerm('delete_logs')) { showToast('ليس لديك صلاحية حذف السجل'); return; }
-confirmCallback = function() {
-logs = [];
-saveAll();
-renderControlLogs();
-if(document.getElementById('memberDetailScreen').classList.contains('active') && currentMemberId) {
-filterDetailLog(currentDetailFilter);
-}
-showToast('تم مسح جميع السجلات بنجاح', 'success');
-};
-document.getElementById('confirmTitle').textContent = 'مسح سجل الأحداث';
-document.getElementById('confirmMsg').textContent = 'هل أنت متأكد من مسح كافة سجلات الأحداث؟ لا يمكن التراجع عن هذا الإجراء.';
-document.getElementById('confirmModal').className = 'modal confirm-modal';
-document.getElementById('confirmOverlay').classList.add('active');
-}
-// ===== ENTITY LOG DELETION =====
-function clearMemberLogsPrompt() {
-if(!hasPerm('delete_logs')) { showToast('ليس لديك صلاحية حذف السجل'); return; }
-const m = members.find(x => Number(x.id) === Number(currentMemberId));
-if(!m) return;
-confirmCallback = function() {
-const mid = Number(m.id);
-logs = (logs || []).filter(l => l.isGroupLog === true || Number(l.memberId) !== mid);
-saveAll();
-filterDetailLog(currentDetailFilter);
-renderControlLogs();
-showToast(`تم حذف سجل العضو "${m.name}" بنجاح`, 'success');
-};
-document.getElementById('confirmTitle').textContent = 'حذف سجل العضو';
-document.getElementById('confirmMsg').textContent = `هل أنت متأكد من حذف جميع سجلات العضو "${m.name}"؟`;
-document.getElementById('confirmModal').className = 'modal confirm-modal';
-document.getElementById('confirmOverlay').classList.add('active');
-}
-function clearGroupLogsPrompt() {
-if(!hasPerm('delete_logs')) { showToast('ليس لديك صلاحية حذف السجل'); return; }
-const g = groups.find(x => Number(x.id) === Number(currentGroupDetailId));
-if(!g) return;
-confirmCallback = function() {
-const gid = Number(g.id);
-logs = (logs || []).filter(l => !(l.isGroupLog === true && Number(l.groupId) === gid));
-saveAll();
-filterGroupDetailLog(currentGroupDetailFilter);
-renderControlLogs();
-showToast(`تم حذف سجل المجموعة "${g.name}" بنجاح`, 'success');
-};
-document.getElementById('confirmTitle').textContent = 'حذف سجل المجموعة';
-document.getElementById('confirmMsg').textContent = `هل أنت متأكد من حذف جميع سجلات المجموعة "${g.name}"؟`;
-document.getElementById('confirmModal').className = 'modal confirm-modal';
-document.getElementById('confirmOverlay').classList.add('active');
+  <div class="log-left">
+    <div><span class="log-action ${type}">${action}</span>${owner}${details ? ` (${details})` : ''}</div>
+  </div>
+  <span class="log-time">${esc(l.time || '')}</span>
+  ${hasPerm('delete_logs') ? `<button class="log-delete-btn can-delete-log btn-press" title="حذف السجل" aria-label="حذف السجل" onclick="event.stopPropagation();promptDeleteLog(${l.id})"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>` : ''}
+</div>`;
+  });
+  container.innerHTML = html;
+  setupLogGestures(container);
 }
 
 // ===== MEMBER DETAIL SCREEN =====
@@ -3065,10 +2856,10 @@ groupLogs.forEach(l => {
   html += `
 <div class="log-item-with-delete" data-log-id="${l.id}">
 <div class="log-left">
-<button class="log-delete-btn btn-press ${hasPerm('delete_logs') ? 'can-delete-log' : ''}" onclick="event.stopPropagation();promptDeleteLog(${l.id})" title="حذف"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
 <div><span class="log-action ${l.type}">${esc(l.action)}</span> (${esc(l.details)})</div>
 </div>
 <span class="log-time">${l.time}</span>
+${hasPerm('delete_logs') ? `<button class="log-delete-btn can-delete-log btn-press" title="حذف السجل" aria-label="حذف السجل" onclick="event.stopPropagation();promptDeleteLog(${l.id})"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>` : ''}
 </div>
 `;
 });
@@ -3163,10 +2954,10 @@ mLogs.forEach(l => {
 html += `
 <div class="log-item-with-delete" data-log-id="${l.id}">
 <div class="log-left">
-<button class="log-delete-btn btn-press ${hasPerm('delete_logs') ? 'can-delete-log' : ''}" onclick="event.stopPropagation();promptDeleteLog(${l.id})" title="حذف"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
 <div><span class="log-action ${l.type}">${esc(l.action)}</span> (${esc(l.details)})</div>
 </div>
 <span class="log-time">${l.time}</span>
+${hasPerm('delete_logs') ? `<button class="log-delete-btn can-delete-log btn-press" title="حذف السجل" aria-label="حذف السجل" onclick="event.stopPropagation();promptDeleteLog(${l.id})"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>` : ''}
 </div>
 `;
 });
@@ -3175,112 +2966,151 @@ setupLogGestures(container);
 }
 // ===== MODAL (PLUS, MINUS, NOTE) =====
 function openModal(type, memberId) {
-currentModalType = type;
-currentMemberId = memberId;
-const m = members.find(x => x.id === memberId);
-if(!m) return;
-const modal = document.getElementById('modal');
-const title = document.getElementById('modalTitle');
-const body = document.getElementById('modalBody');
-if(type === 'plus') {
-modal.className = 'modal green';
-title.textContent = `إضافة نقاط لـ ${m.name}`;
-body.innerHTML = `
-<label>عدد النقاط</label>
-<input type="number" id="modalAmount" placeholder="مثال: 10" min="1">
-<label>السبب / التفاصيل</label>
-<textarea id="modalReason" placeholder="اكتب سبب إضافة النقاط..."></textarea>
-<button class="modal-submit btn-press" onclick="submitModal()">تأكيد الإضافة</button>
-`;
-} else if(type === 'minus') {
-modal.className = 'modal red';
-title.textContent = `خصم نقاط من ${m.name}`;
-body.innerHTML = `
-<label>عدد النقاط</label>
-<input type="number" id="modalAmount" placeholder="مثال: 10" min="1">
-<label>السبب / التفاصيل</label>
-<textarea id="modalReason" placeholder="اكتب سبب خصم النقاط..."></textarea>
-<button class="modal-submit btn-press" onclick="submitModal()">تأكيد الخصم</button>
-`;
-} else if(type === 'note') {
-modal.className = 'modal blue';
-title.textContent = `إضافة ملاحظة لـ ${m.name}`;
-body.innerHTML = `
-<label>نص الملاحظة</label>
-<textarea id="modalReason" placeholder="اكتب الملاحظة هنا..."></textarea>
-<button class="modal-submit btn-press" onclick="submitModal()">حفظ الملاحظة</button>
-`;
+  currentModalType=type; currentMemberId=memberId;
+  const m=members.find(x=>Number(x.id)===Number(memberId)); if(!m)return;
+  const modal=document.getElementById('modal'), title=document.getElementById('modalTitle'), body=document.getElementById('modalBody');
+  if(type==='plus'){modal.className='modal green';title.textContent=`إضافة نقاط لـ ${m.name}`;body.innerHTML=buildPointModalBody('plus','submitModal','تأكيد الإضافة');setTimeout(()=>updatePointLimitUI('plus'),0);}
+  else if(type==='minus'){modal.className='modal red';title.textContent=`خصم نقاط من ${m.name}`;body.innerHTML=buildPointModalBody('minus','submitModal','تأكيد الخصم');setTimeout(()=>updatePointLimitUI('minus'),0);}
+  else if(type==='note'){modal.className='modal blue';title.textContent=`إضافة ملاحظة لـ ${m.name}`;body.innerHTML=`<label>نص الملاحظة</label><textarea id="modalReason" placeholder="اكتب الملاحظة هنا..."></textarea><button class="modal-submit btn-press" onclick="submitModal()">حفظ الملاحظة</button>`;}
+  document.getElementById('modalOverlay').classList.add('active');
 }
-document.getElementById('modalOverlay').classList.add('active');
+function closeModal(){const o=document.getElementById('modalOverlay');if(o){o.classList.remove('active');o.style.display='none';requestAnimationFrame(()=>{o.style.display='';});}currentModalType=null;currentMemberId=null;currentGroupModalId=null;selectedPointOptionKey=null;}
+function submitModal(){
+  const m=members.find(x=>Number(x.id)===Number(currentMemberId)); if(!m)return; m.points=formatPoints(m.points); const reason=document.getElementById('modalReason')?.value.trim()||'';
+  if(currentModalType==='plus'){
+    if(!hasPerm('add_points')){showToast('ليس لديك صلاحية');return;} const result=validatePointAmount('plus'); if(!result)return; const {amount,option}=result;
+    m.points=formatPoints(m.points)+amount; logs.unshift({id:createLogId(),action:`إضافة ${amount} نقاط`,memberName:m.name,details:`${option.label}${reason?' — '+reason:''}`,type:'plus',memberId:m.id,pointCategory:option.key,pointCategoryLabel:option.label,pointMax:option.max,time:new Date().toLocaleString('ar-SA')}); showToast(`تمت إضافة ${amount} نقاط لـ ${m.name}`,'success');
+  } else if(currentModalType==='minus'){
+    if(!hasPerm('remove_points')){showToast('ليس لديك صلاحية');return;} const result=validatePointAmount('minus'); if(!result)return; const {amount,option}=result;
+    m.points=formatPoints(m.points)-amount; logs.unshift({id:createLogId(),action:`خصم ${amount} نقاط`,memberName:m.name,details:`${option.label}${reason?' — '+reason:''}`,type:'minus',memberId:m.id,pointCategory:option.key,pointCategoryLabel:option.label,pointMax:option.max,time:new Date().toLocaleString('ar-SA')}); showToast(`تم خصم ${amount} نقاط من ${m.name}`,'success');
+  } else if(currentModalType==='note'){
+    if(!reason){showToast('يرجى كتابة الملاحظة');return;} logs.unshift({id:createLogId(),action:'ملاحظة',memberName:m.name,details:reason,type:'note',memberId:m.id,time:new Date().toLocaleString('ar-SA')}); showToast('تمت إضافة الملاحظة بنجاح','success');
+  }
+  const updatedMemberId = m.id;
+  const updatedDetailOrigin = detailOrigin;
+  const memberDetailWasActive = document.getElementById('memberDetailScreen')?.classList.contains('active');
+  const groupDetailWasActive = document.getElementById('groupDetailScreen')?.classList.contains('active');
+  const updatedGroupDetailId = currentGroupDetailId;
+  saveAll(); renderMembers(); renderControlMembers(); renderControlLogs();
+  closeModal();
+  if(memberDetailWasActive) {
+    currentMemberId = updatedMemberId;
+    detailOrigin = updatedDetailOrigin;
+    renderMemberDetail(updatedMemberId);
+    filterDetailLog(currentDetailFilter);
+  }
+  if(groupDetailWasActive && updatedGroupDetailId) {
+    currentGroupDetailId = updatedGroupDetailId;
+    renderGroupDetail(updatedGroupDetailId);
+    filterGroupDetailLog(currentGroupDetailFilter);
+  }
 }
-function closeModal() {
-document.getElementById('modalOverlay').classList.remove('active');
+// ===== LOG DELETE =====
+function promptDeleteLog(logId) {
+  if(!hasPerm('delete_logs')) {
+    showToast('ليس لديك صلاحية حذف السجل');
+    return;
+  }
+  const log = logs.find(l => Number(l.id) === Number(logId));
+  if(!log) return;
+  const ownerName = String(log.memberName || '').trim();
+  confirmCallback = function() {
+    markDeletedLogIds(logId);
+    logs = logs.filter(l => Number(l.id) !== Number(logId));
+    saveAll();
+    closeConfirm();
+    if(document.getElementById('memberDetailScreen')?.classList.contains('active') && currentMemberId){
+      renderMemberDetail(currentMemberId);
+      filterDetailLog(currentDetailFilter);
+    }
+    if(document.getElementById('groupDetailScreen')?.classList.contains('active') && currentGroupDetailId){
+      renderGroupDetail(currentGroupDetailId);
+      filterGroupDetailLog(currentGroupDetailFilter);
+    }
+    renderMembers();
+    renderControlMembers();
+    renderControlLogs();
+    showToast(`تم حذف السجل${ownerName ? ` الخاص بـ ${ownerName}` : ''}`, 'success');
+  };
+  document.getElementById('confirmTitle').textContent = 'حذف السجل';
+  document.getElementById('confirmMsg').textContent = 'هل أنت متأكد من حذف هذا السجل؟ لا يمكن التراجع عن الحذف.';
+  document.getElementById('confirmModal').className = 'modal confirm-modal';
+  document.getElementById('confirmOverlay').classList.add('active');
 }
-function submitModal() {
-const m = members.find(x => Number(x.id) === Number(currentMemberId));
-if(!m) return;
-m.points = formatPoints(m.points);
-const reason = document.getElementById('modalReason') ? document.getElementById('modalReason').value.trim() : '';
-if(currentModalType === 'plus') {
-if(!hasPerm('add_points')) { showToast('ليس لديك صلاحية'); return; }
-const amount = parseInt(document.getElementById('modalAmount').value, 10);
-if(isNaN(amount) || amount <= 0) { showToast('يرجى ادخال عدد نقاط صحيح'); return; }
 
-m.points = formatPoints(m.points) + amount;
-logs.unshift({
-  id: createLogId(),
-  action: `إضافة ${amount} نقاط`,
-  memberName: m.name,
-  details: reason || 'بدون سبب',
-  type: 'plus',
-  memberId: m.id,
-  time: new Date().toLocaleString('ar-SA')
-});
-showToast(`تمت إضافة ${amount} نقاط لـ ${m.name}`, 'success');
-
-} else if(currentModalType === 'minus') {
-if(!hasPerm('remove_points')) { showToast('ليس لديك صلاحية'); return; }
-const amount = parseInt(document.getElementById('modalAmount').value, 10);
-if(isNaN(amount) || amount <= 0) { showToast('يرجى ادخال عدد نقاط صحيح'); return; }
-
-m.points = formatPoints(m.points) - amount;
-logs.unshift({
-  id: createLogId(),
-  action: `خصم ${amount} نقاط`,
-  memberName: m.name,
-  details: reason || 'بدون سبب',
-  type: 'minus',
-  memberId: m.id,
-  time: new Date().toLocaleString('ar-SA')
-});
-showToast(`تم خصم ${amount} نقاط من ${m.name}`, 'success');
-
-} else if(currentModalType === 'note') {
-if(!reason) { showToast('يرجى كتابة الملاحظة'); return; }
-
-logs.unshift({
-  id: createLogId(),
-  action: 'ملاحظة',
-  memberName: m.name,
-  details: reason,
-  type: 'note',
-  memberId: m.id,
-  time: new Date().toLocaleString('ar-SA')
-});
-showToast('تمت إضافة الملاحظة بنجاح', 'success');
-
+function clearMemberLogsPrompt(){
+  if(!hasPerm('delete_logs')){ showToast('ليس لديك صلاحية حذف السجل'); return; }
+  const memberId=currentMemberId;
+  if(memberId==null) return;
+  const ids=logs.filter(l=>Number(l.memberId)===Number(memberId)).map(l=>l.id);
+  if(!ids.length){ showToast('لا يوجد سجل لحذفه'); return; }
+  confirmCallback=function(){
+    markDeletedLogIds(ids);
+    logs=logs.filter(l=>Number(l.memberId)!==Number(memberId));
+    saveAll();
+    closeConfirm();
+    renderMemberDetail(memberId);
+    filterDetailLog(currentDetailFilter);
+    renderMembers(); renderControlMembers(); renderControlLogs();
+    showToast('تم حذف سجل العضو','success');
+  };
+  document.getElementById('confirmTitle').textContent='حذف سجل العضو';
+  document.getElementById('confirmMsg').textContent='هل أنت متأكد من حذف جميع سجلات هذا العضو؟ لا يمكن التراجع عن الحذف.';
+  document.getElementById('confirmModal').className='modal confirm-modal';
+  document.getElementById('confirmOverlay').classList.add('active');
 }
-saveAll();
-renderMembers();
-renderControlMembers();
-if(document.getElementById('memberDetailScreen').classList.contains('active') && currentMemberId === m.id) {
-openMemberDetail(m.id, detailOrigin);
+
+function clearGroupLogsPrompt(){
+  if(!hasPerm('delete_logs')){ showToast('ليس لديك صلاحية حذف السجل'); return; }
+  const groupId=currentGroupDetailId;
+  if(groupId==null) return;
+  const ids=logs.filter(l=>Number(l.groupId)===Number(groupId)).map(l=>l.id);
+  if(!ids.length){ showToast('لا يوجد سجل لحذفه'); return; }
+  confirmCallback=function(){
+    markDeletedLogIds(ids);
+    logs=logs.filter(l=>Number(l.groupId)!==Number(groupId));
+    saveAll();
+    closeConfirm();
+    renderGroupDetail(groupId);
+    filterGroupDetailLog(currentGroupDetailFilter);
+    renderMembers(); renderControlMembers(); renderControlLogs();
+    showToast('تم حذف سجل المجموعة','success');
+  };
+  document.getElementById('confirmTitle').textContent='حذف سجل المجموعة';
+  document.getElementById('confirmMsg').textContent='هل أنت متأكد من حذف جميع سجلات هذه المجموعة؟ لا يمكن التراجع عن الحذف.';
+  document.getElementById('confirmModal').className='modal confirm-modal';
+  document.getElementById('confirmOverlay').classList.add('active');
 }
-if(document.getElementById('groupDetailScreen').classList.contains('active') && currentGroupDetailId) {
-renderGroupDetail(currentGroupDetailId);
+
+function clearAllLogsPrompt() {
+  if(!hasPerm('delete_logs')) {
+    showToast('ليس لديك صلاحية حذف السجل');
+    return;
+  }
+  confirmCallback = function() {
+    logs = [];
+    saveAll();
+    closeConfirm();
+    renderMembers();
+    renderControlMembers();
+    renderControlLogs();
+    if(document.getElementById('memberDetailScreen')?.classList.contains('active') && currentMemberId){
+      filterDetailLog(currentDetailFilter);
+    }
+    if(document.getElementById('groupDetailScreen')?.classList.contains('active') && currentGroupDetailId){
+      filterGroupDetailLog(currentGroupDetailFilter);
+    }
+    showToast('تم حذف سجل الأحداث بالكامل', 'success');
+  };
+  document.getElementById('confirmTitle').textContent = 'حذف سجل الأحداث';
+  document.getElementById('confirmMsg').textContent = 'هل أنت متأكد من حذف جميع السجلات؟ لا يمكن التراجع عن الحذف.';
+  document.getElementById('confirmModal').className = 'modal confirm-modal';
+  document.getElementById('confirmOverlay').classList.add('active');
 }
-closeModal();
-}
+
+// Safe no-op gesture hook: older UI patches call this after rendering logs.
+function setupLogGestures(container) { return; }
+
 // ===== CONFIRM MODAL =====
 function closeConfirm() {
 document.getElementById('confirmOverlay').classList.remove('active');
@@ -3360,7 +3190,7 @@ window.renderGroupDetail = function(groupId) {
   if(title) title.textContent = g.name;
   if(points) points.textContent = `${Number(g.points)||0} نقطة للمجموعة`;
   const groupClearLogWrap=document.getElementById('groupClearLogWrap');
-  if(groupClearLogWrap) groupClearLogWrap.style.display = hasPerm('delete_logs') ? 'block' : 'none';
+  if(groupClearLogWrap) groupClearLogWrap.style.display = 'none';
 
   const headerActions=document.getElementById('groupHeaderQuickActions');
   if(headerActions){
