@@ -1176,7 +1176,7 @@ let members = [];
 let groups = [];
 let assistants = [];
 let logs = [];
-let currentUser = Store.get('currentUser',null);
+let currentUser = null;
 let rememberUser = Store.get('rememberUser',null);
 let currentMemberId = null;
 let currentGroupModalId = null;
@@ -2027,7 +2027,8 @@ showToast('اسم المستخدم أو كلمة المرور غير صحيحة'
 document.getElementById('logoutBtn').addEventListener('click', function() {
 currentUser = null;
 Store.set('currentUser', null);
-Store.set('rememberUser', null);
+// Keep remembered credentials so the next visit only needs a manual login.
+
 if(controlPanelBtn) controlPanelBtn.classList.remove('visible');
 showScreen('home');
 showToast('تم تسجيل الخروج بنجاح', 'success');
@@ -3220,9 +3221,27 @@ el.classList.add('item-enter');
 }
 // ===== INIT =====
 window.addEventListener('DOMContentLoaded', () => {
-if(rememberUser) {
-currentUser = rememberUser;
+// Always start at the welcome screen on every new page load.
+// 'تذكرني' only restores the saved credentials after the user opens the login panel;
+// it never auto-logs in or skips the welcome screen.
+currentUser = null;
+Store.set('currentUser', null);
+const saved = rememberUser;
+const usernameInput = document.getElementById('username');
+const passwordInput = document.getElementById('password');
+const rememberInput = document.getElementById('rememberMe');
+if(saved) {
+if(usernameInput) usernameInput.value = saved.username || '';
+if(passwordInput) passwordInput.value = saved.password || '';
+if(rememberInput) rememberInput.checked = true;
+} else {
+if(usernameInput) usernameInput.value = '';
+if(passwordInput) passwordInput.value = '';
+if(rememberInput) rememberInput.checked = false;
 }
+// First screen is always the welcome page. The user must press
+// 'تسجيل دخول' there before the login panel is shown.
+showScreen('home');
 setupToastSwipe();
 setupFirebase();
 initFirebase();
