@@ -367,6 +367,10 @@ body{font-size:18px}
 @media(max-width:700px){.member-name-main{gap:6px}.member-role-inline{font-size:.68rem}}
 </style>
 
+<style id="assistant-and-mobile-list-fix">
+.assistant-card-name{min-width:0}.assistant-card-name-text{min-width:0;flex:1 1 auto}.assistant-card-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}.assistant-edit-btn,.assistant-delete-btn{width:30px;height:30px;border-radius:8px;border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}.assistant-edit-btn{background:rgba(139,92,246,.12);color:#c4b5fd}.assistant-delete-btn{background:rgba(239,68,68,.12);color:#ef4444}.assistant-edit-btn svg,.assistant-delete-btn svg{width:16px;height:16px;fill:currentColor}.assistant-admin-badge{font-size:.68rem;padding:3px 8px;border-radius:999px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.28);color:#86efac;white-space:nowrap;flex-shrink:0}.assistant-perm-tag.muted{opacity:.6}.perm-card label{pointer-events:none}
+@media(max-width:700px){#groupsMainList .member-item,#controlGroupsList .member-item{grid-template-columns:minmax(0,1fr)!important;gap:10px!important}#groupsMainList .member-item>.member-info,#controlGroupsList .member-item>.member-info{grid-column:1!important;width:100%!important;min-width:0!important}#groupsMainList .member-item>.group-points,#controlGroupsList .member-item>.group-points{grid-column:1!important;justify-self:start!important;width:max-content!important;max-width:100%!important}#groupsMainList .member-item>.member-actions,#controlGroupsList .member-item>.member-actions{grid-column:1!important;justify-content:flex-start!important;width:100%!important}#groupsMainList .member-name,#controlGroupsList .member-name{width:100%!important;min-width:0!important}#groupsMainList .member-name-text,#controlGroupsList .member-name-text{display:block!important;width:100%!important;min-width:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;word-break:normal!important;overflow-wrap:normal!important}#groupsMainList .member-text,#controlGroupsList .member-text{width:100%!important;min-width:0!important}.assistant-card{padding:14px!important}.assistant-card-name{gap:6px!important}.assistant-card-name-text{font-size:.98rem!important}.assistant-perm-tag{font-size:.68rem!important;padding:3px 8px!important}.perm-grid{grid-template-columns:1fr!important}}
+</style>
 <style id="mobile-scroll-fix">
 /* MOBILE SCROLL FIX */
 @media (max-width: 700px){
@@ -1517,6 +1521,7 @@ function mergeAssistants(localItems, remoteItems) {
   Object.keys(remote).forEach(id => { if(!deleted.has(String(id))) out[id] = remote[id]; });
 
   Object.keys(local).forEach(id => {
+    if(deleted.has(String(id))) return;
     const localAssistant = local[id];
     const remoteAssistant = remote[id];
 
@@ -2256,6 +2261,72 @@ return `<div class="search-result-card btn-press" onclick="openMemberDetail(${m.
 </div>`;
 }).join('');
 }
+// ===== ASSISTANTS / PERMISSIONS =====
+const ASSISTANT_PERMISSION_LABELS = {
+  add_points:'إضافة نقاط', remove_points:'خصم نقاط', add_members:'إضافة أعضاء', remove_members:'إزالة أعضاء',
+  edit_members:'تعديل بيانات الأعضاء', add_assistants:'إضافة مساعدين', delete_assistants:'حذف المساعدين',
+  add_groups:'إضافة مجموعات', remove_groups:'حذف مجموعات', delete_logs:'حذف السجل'
+};
+function assistantPermissionTags(perms){
+  const list=Array.isArray(perms)?perms:[];
+  return list.length ? list.map(p=>`<span class="assistant-perm-tag">${esc(ASSISTANT_PERMISSION_LABELS[p]||p)}</span>`).join('') : '<span class="assistant-perm-tag muted">بدون صلاحيات</span>';
+}
+function renderControlAssistants(){
+  const container=document.getElementById('controlAssistantsList'); if(!container)return;
+  normalizeState();
+  if(!assistants.length){container.innerHTML='<div class="empty-state">لا يوجد مساعدين</div>';return;}
+  container.innerHTML=assistants.map(a=>{
+    const isNaif=String(a.username||'').trim().toLowerCase()==='naif';
+    const actions=`${(!isNaif&&hasPerm('add_assistants'))?`<button type="button" class="assistant-edit-btn btn-press" onclick="event.stopPropagation();openAssistantPermissions('${String(a.id).replace(/'/g,"\\'")}')" title="تعديل الصلاحيات"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75-2.69-2.69L3 17.25zm14.06-10l1.69-1.69c.39-.39 1.02-.39 1.41 0l1.28 1.28c.39.39.39 1.02 0 1.41l-1.69 1.69-2.69-2.69z"/></svg></button>`:''}${(!isNaif&&hasPerm('delete_assistants'))?`<button type="button" class="assistant-delete-btn btn-press" onclick="event.stopPropagation();promptDeleteAssistant('${String(a.id).replace(/'/g,"\\'")}')" title="حذف المساعد"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>`:''}`;
+    return `<div class="assistant-card"><div class="assistant-card-header"><div class="assistant-card-name"><span class="assistant-card-name-text" title="${esc(a.username)}">${esc(a.username)}</span>${isNaif?'<span class="assistant-admin-badge">مدير</span>':''}<div class="assistant-card-actions">${actions}</div></div></div><div class="assistant-card-perms">${assistantPermissionTags(isNaif?FULL_ASSISTANT_PERMISSIONS:a.permissions)}</div></div>`;
+  }).join('');
+}
+function resetAssistantPermissionForm(){
+  selectedPermissions=[];
+  document.querySelectorAll('#tab-addAssistant .perm-card').forEach(card=>{card.classList.remove('selected');const cb=card.querySelector('input[type="checkbox"]');if(cb)cb.checked=false;});
+}
+function togglePerm(card,key){
+  if(!card||!key)return; const cb=card.querySelector('input[type="checkbox"]'); if(!cb)return;
+  cb.checked=!cb.checked; card.classList.toggle('selected',cb.checked);
+  if(cb.checked){if(!selectedPermissions.includes(key))selectedPermissions.push(key);}else{selectedPermissions=selectedPermissions.filter(p=>p!==key);}
+}
+function addNewAssistant(){
+  if(!hasPerm('add_assistants')){showToast('ليس لديك صلاحية إضافة مساعدين');return;}
+  const nameEl=document.getElementById('newAssistantName'),passEl=document.getElementById('newAssistantPass');
+  const username=String(nameEl?.value||'').trim(),password=String(passEl?.value||'').trim();
+  if(!username){showToast('يرجى كتابة اسم المستخدم');return;} if(!password){showToast('يرجى كتابة كلمة المرور');return;}
+  if(['admin','naif'].includes(username.toLowerCase())){showToast('اسم المستخدم محجوز');return;}
+  if(assistants.some(a=>String(a.username||'').trim().toLowerCase()===username.toLowerCase())){showToast('اسم المستخدم مستخدم مسبقاً');return;}
+  const permissions=[...new Set(selectedPermissions)].filter(p=>FULL_ASSISTANT_PERMISSIONS.includes(p));
+  const a={id:'ast_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8),username,password,permissions};
+  assistants.push(a); clearDeletedAssistantId(a.id);
+  logs.unshift({id:createLogId(),action:'إضافة مساعد جديد',memberName:username,details:permissions.length?`الصلاحيات: ${permissions.map(p=>ASSISTANT_PERMISSION_LABELS[p]||p).join('، ')}`:'بدون صلاحيات',type:'plus',time:new Date().toLocaleString('ar-SA')});
+  saveAll(); renderControlAssistants(); renderControlLogs(); nameEl.value='';passEl.value='';resetAssistantPermissionForm();showToast('تمت إضافة المساعد بنجاح','success');
+}
+function openAssistantPermissions(id){
+  const a=assistants.find(x=>String(x.id)===String(id)); if(!a)return;
+  if(String(a.username||'').trim().toLowerCase()==='naif'){showToast('حساب Naif لديه جميع الصلاحيات دائماً');return;}
+  if(!hasPerm('add_assistants')){showToast('ليس لديك صلاحية تعديل صلاحيات المساعدين');return;}
+  const body=document.getElementById('assistantPermBody');if(!body)return; const cur=new Set(Array.isArray(a.permissions)?a.permissions:[]);
+  body.innerHTML=`<div style="font-size:.9rem;color:#d4b896;margin-bottom:14px">المساعد: <strong style="color:#fff">${esc(a.username)}</strong></div><div class="assistant-perm-editor"><div class="perm-grid">${FULL_ASSISTANT_PERMISSIONS.map(p=>`<div class="perm-card ${cur.has(p)?'selected':''}" data-edit-perm="${p}" onclick="toggleAssistantEditPerm(this)"><input type="checkbox" ${cur.has(p)?'checked':''}><span class="perm-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span><label>${esc(ASSISTANT_PERMISSION_LABELS[p]||p)}</label></div>`).join('')}</div><button class="submit-btn btn-press" onclick="saveAssistantPermissions('${String(id).replace(/'/g,"\\'")}')">حفظ الصلاحيات</button></div>`;
+  document.getElementById('assistantPermOverlay').classList.add('active');
+}
+function toggleAssistantEditPerm(card){const cb=card.querySelector('input');if(!cb)return;cb.checked=!cb.checked;card.classList.toggle('selected',cb.checked);}
+function saveAssistantPermissions(id){
+  const a=assistants.find(x=>String(x.id)===String(id));if(!a)return;if(!hasPerm('add_assistants')){showToast('ليس لديك صلاحية تعديل صلاحيات المساعدين');return;}
+  a.permissions=[...document.querySelectorAll('#assistantPermBody .perm-card[data-edit-perm]')].filter(c=>c.querySelector('input')?.checked).map(c=>c.dataset.editPerm);
+  logs.unshift({id:createLogId(),action:'تعديل صلاحيات مساعد',memberName:a.username,details:a.permissions.length?`الصلاحيات: ${a.permissions.map(p=>ASSISTANT_PERMISSION_LABELS[p]||p).join('، ')}`:'بدون صلاحيات',type:'note',time:new Date().toLocaleString('ar-SA')});
+  saveAll();renderControlAssistants();renderControlLogs();closeAssistantPermModal();showToast('تم حفظ صلاحيات المساعد','success');
+}
+function closeAssistantPermModal(){document.getElementById('assistantPermOverlay')?.classList.remove('active');}
+function promptDeleteAssistant(id){
+  const a=assistants.find(x=>String(x.id)===String(id));if(!a)return;
+  if(String(a.username||'').trim().toLowerCase()==='naif'){showToast('لا يمكن حذف حساب Naif');return;}
+  if(!hasPerm('delete_assistants')){showToast('ليس لديك صلاحية حذف المساعدين');return;}
+  confirmCallback=function(){const sid=String(id);addDeletedAssistantId(sid);assistants=assistants.filter(x=>String(x.id)!==sid);logs.unshift({id:createLogId(),action:'حذف مساعد',memberName:a.username,details:'تم حذف حساب المساعد',type:'minus',time:new Date().toLocaleString('ar-SA')});saveAll();renderControlAssistants();renderControlLogs();closeConfirm();flushAssistantDeletions();showToast('تم حذف المساعد بنجاح','success');};
+  document.getElementById('confirmTitle').textContent='حذف المساعد';document.getElementById('confirmMsg').textContent=`هل أنت متأكد من حذف المساعد "${a.username}"؟ لا يمكن التراجع عن الحذف.`;document.getElementById('confirmModal').className='modal confirm-modal';document.getElementById('confirmOverlay').classList.add('active');
+}
+
 // ===== CONTROL SCREEN TABS =====
 function switchControlTab(tab) {
 const activeContent = document.querySelector('.control-content.active');
@@ -2274,6 +2345,7 @@ newContent.classList.add('active');
 if(tab === 'members') renderControlMembers();
 if(tab === 'groups') renderControlGroups();
 if(tab === 'assistants') renderControlAssistants();
+if(tab === 'addAssistant') resetAssistantPermissionForm();
 if(tab === 'logs') renderControlLogs();
 newContent.style.transition = 'none';
 newContent.style.opacity = '0';
